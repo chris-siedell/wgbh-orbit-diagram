@@ -1,8 +1,12 @@
+/*
+src/js/InteractiveElement.js
+wgbh-orbit-diagram
+astro.unl.edu
+2019-06-30
+*/
 
 
-
-
-export default class Common {
+export default class InteractiveElement {
 
 
 	constructor() {
@@ -15,17 +19,26 @@ export default class Common {
 		// 2. Call super() at beginning and super._init() at ending of constructor.
 		// 3. Define these methods:
 		//	_drawHitAreas
+		// 3b. Set these properties in _drawHitAreas:
+		//	_maxMouseHitAreaDistance
+		//	_maxTouchHitAreaDistance
 		// 4. Create these SVG layers:
 		//	_shadowed
 		//	_focus
 		//	_mouseHitArea
 		//	_touchHitArea
 
+
+
+		this._touchHitAreaFill = 'rgba(255, 0, 255, 0.5)';
+		this._mouseHitAreaFill = 'rgba(0, 255, 0, 0)';
+
+
 		// These get defined by the subclass.
 		this._DEFAULT_IMAGE_RADIUS = 0;
 		this._debugName = 'undefined';
 
-		// The MIN_TOUCH_RADIUS constant provides guidance to the _drawHitAreas function
+		// The MIN_TOUCH_RADIUS constant is meant to provide guidance to the _drawHitAreas function
 		//	so that the touch interaction areas are not too small.
 		this._MIN_TOUCH_RADIUS = 24;
 
@@ -47,8 +60,6 @@ export default class Common {
 
 		this._mouseHitArea.addEventListener('mouseenter', this._onMouseEnter);
 		this._mouseHitArea.addEventListener('mouseleave', this._onMouseLeaveLocal);
-
-
 	}
 
 

@@ -1,21 +1,29 @@
-
+/*
+src/js/Moon.js
+wgbh-orbit-diagram
+astro.unl.edu
+2019-06-30
+*/
 
 
 import MoonURL from '../graphics/orbit-diagram-moon.svg';
 import MoonFocusURL from '../graphics/orbit-diagram-moon-focus.svg';
 
-import Common from './Common.js';
+import InteractiveElement from './InteractiveElement.js';
 
 const svgNS = 'http://www.w3.org/2000/svg';
 const xlinkNS = 'http://www.w3.org/1999/xlink';
 
 
-
-export default class Moon extends Common {
+export default class Moon extends InteractiveElement {
 
 
 	constructor() {
 		super();
+
+		this._debugName = 'Moon';
+
+		this._DEFAULT_IMAGE_RADIUS = 13.5;
 
 		this._outerGroup = document.createElementNS(svgNS, 'g');
 
@@ -39,37 +47,35 @@ export default class Moon extends Common {
 		this._innerGroup.appendChild(this._shadowed);
 
 		this._touchHitArea = document.createElementNS(svgNS, 'circle');
-		this._touchHitArea.setAttribute('fill', 'rgba(255, 0, 255, 0.8)');
 		this._innerGroup.appendChild(this._touchHitArea);
 
 		this._mouseHitArea = document.createElementNS(svgNS, 'circle');
-		this._mouseHitArea.setAttribute('fill', 'rgba(0, 255, 0, 0.8)');
 		this._innerGroup.appendChild(this._mouseHitArea);
 
-		this._init();
+		super._init();
 	}
 
 
 	_redrawHitAreas() {
 
-		// _MIN_HIT_RADIUS
+		this._touchHitArea.setAttribute('fill', this._touchHitAreaFill);
+		this._mouseHitArea.setAttribute('fill', this._mouseHitAreaFill);
 
-		const MOON_IMAGE_DEFAULT_RADIUS = 13.5;
-
-		let r = this._scale * MOON_IMAGE_DEFAULT_RADIUS;
-
-		if (r < this._MIN_TOUCH_RADIUS) {
-			r = this._MIN_TOUCH_RADIUS;
+		let touchRadius = this._radius;
+		if (touchRadius < this._MIN_TOUCH_RADIUS) {
+			touchRadius = this._MIN_TOUCH_RADIUS;
 		}
 
-		this._touchHitArea.setAttribute('r', r);
+		this._touchHitArea.setAttribute('r', touchRadius);
 		this._touchHitArea.setAttribute('cx', 0);
 		this._touchHitArea.setAttribute('cy', 0);
 
-		this._mouseHitArea.setAttribute('r', MOON_IMAGE_DEFAULT_RADIUS);
+		this._mouseHitArea.setAttribute('r', this._DEFAULT_IMAGE_RADIUS);
 		this._mouseHitArea.setAttribute('cx', 0);
 		this._mouseHitArea.setAttribute('cy', 0);
 		
+		this._maxTouchHitAreaDistance = touchRadius;
+		this._maxMouseHitAreaDistance = this._DEFAULT_IMAGE_RADIUS;
 	}
 
 

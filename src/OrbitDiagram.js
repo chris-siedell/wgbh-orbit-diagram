@@ -167,6 +167,16 @@ export default class OrbitDiagram {
 
 		this._moon.setScale(this._moonScale);
 
+		// For development: check for hit area overlap.
+		let minSafeOrbitRadiusForMouse = this._earth._maxMouseHitAreaDistance + this._moon._maxMouseHitAreaDistance;
+		if (minSafeOrbitRadiusForMouse > this._orbitRadiusPx) {
+			console.warn('The earth\'s and moon\'s mouse hit areas will overlap.');
+		}
+		let minSafeOrbitRadiusForTouch = this._earth._maxTouchHitAreaDistance + this._moon._maxTouchHitAreaDistance;
+		if (minSafeOrbitRadiusForTouch > this._orbitRadiusPx) {
+			console.warn('The earth\'s and moon\'s touch hit areas will overlap.');
+		}
+
 		this._needs_redoLayout = false;
 
 //		console.group('_redoLayout');

@@ -6,8 +6,8 @@ astro.unl.edu
 */
 
 
-import EarthURL from '../graphics/orbit-diagram-placeholders_earth.svg';
-import StickfigureURL from '../graphics/orbit-diagram-placeholders_stickfigure.svg';
+import EarthURL from '../graphics/Boston2_v1_earth.svg';
+import StickfigureURL from '../graphics/Boston2_v1_stickfigure.svg';
 
 import InteractiveElement from './InteractiveElement.js';
 
@@ -203,6 +203,17 @@ export default class Earth extends InteractiveElement {
 
 		this._maxTouchHitAreaDistance = this._scale * touchH;
 		this._maxMouseHitAreaDistance = this._scale * H;
+	}
+
+	_getDistanceOfClientPt(clientPt) {
+		// Distance is measured from observer's location on the globe.
+		let diagramPt = this._orbitDiagram.getDiagramPtForClientPt(clientPt);
+		let radians = this._rotationDegrees * Math.PI/180;
+		let x = this._x + this._radius*Math.sin(radians);
+		let y = this._y - this._radius*Math.cos(radians);
+		let dx = diagramPt.x - x;
+		let dy = diagramPt.y - y;	
+		return Math.sqrt(dx*dx + dy*dy);
 	}
 
 	_getAngleForClientPt(clientPt) {

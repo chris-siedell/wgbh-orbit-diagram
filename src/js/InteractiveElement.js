@@ -57,8 +57,8 @@ export default class InteractiveElement {
 
 		this._isMouseOver = false;
 
-		this._touchHitAreaFill = 'rgba(255, 0, 255, 0)';
-		this._mouseHitAreaFill = 'rgba(0, 255, 0, 0)';
+		this._touchHitAreaFill = 'rgba(255, 0, 255, 0.4)';
+		this._mouseHitAreaFill = 'rgba(0, 255, 0, 0.4)';
 		
 
 		// These get defined by the subclass.
@@ -76,6 +76,8 @@ export default class InteractiveElement {
 		// radius = scale * DEFAULT_IMAGE_RADIUS
 		this._radius = 0;
 		
+		this._x = 0;
+		this._y = 0;
 
 		this._unshadowed = document.createElementNS(svgNS, 'g');
 	}
@@ -98,10 +100,14 @@ export default class InteractiveElement {
 
 		this._onMouseEnter = this._onMouseEnter.bind(this);
 		this._onMouseLeaveLocal = this._onMouseLeaveLocal.bind(this);
-		this._onMouseDown = this._onMouseDown.bind(this);
 
+		this._onMouseDown = this._onMouseDown.bind(this);
 		this._onMouseMove = this._onMouseMove.bind(this);
 		this._onMouseFinished = this._onMouseFinished.bind(this);
+
+		this._onTouchStart = this._onTouchStart.bind(this);
+		this._onTouchMove = this._onTouchMove.bind(this);
+		this._onTouchFinished = this._onTouchFinished.bind(this);
 
 
 		// SVG
@@ -146,6 +152,7 @@ export default class InteractiveElement {
 		this._mouseHitArea.addEventListener('mouseleave', this._onMouseLeaveLocal);
 
 		this._mouseHitArea.addEventListener('mousedown', this._onMouseDown);
+		this._interactive.addEventListener('touchstart', this._onTouchStart);
 	}
 
 	_createShadow() {
@@ -181,6 +188,8 @@ export default class InteractiveElement {
 	}
 
 	setPosition(x, y) {
+		this._x = x;
+		this._y = y;
 		this._outerGroup.setAttribute('transform', 'translate(' + x + ', ' + y + ')');
 	}
 
@@ -210,14 +219,16 @@ export default class InteractiveElement {
 
 	_startDragging(clientPt, type) {
 
+		console.log('start dragging, hotspot distance: ' + this._getDistanceOfClientPt(clientPt));
+
 		if (type === this.TYPE_MOUSE) {
 			document.addEventListener('mousemove', this._onMouseMove);
 			document.addEventListener('mouseup', this._onMouseFinished);
 			document.addEventListener('mouseleave', this._onMouseFinished);
 		} else if (type === this.TYPE_TOUCH) {
-
-			throw new Error('not implemeneted');
-
+			document.addEventListener('touchmove', this._onTouchMove);
+			document.addEventListener('touchend', this._onTouchFinished);
+			document.addEventListener('touchcancel', this._onTouchFinished);
 		} else {
 			console.error('Unknown drag type.');
 			return;
@@ -262,7 +273,9 @@ export default class InteractiveElement {
 			document.removeEventListener('mouseleave', this._onMouseFinished);
 			this._coordinator._onDragEnd(this);
 		} else if (this._dragType === this.TYPE_TOUCH) {
-			throw new Error('not implemeneted');
+			document.removeEventListener('touchmove', this._onTouchMove);
+			document.removeEventListener('touchend', this._onTouchFinished);
+			document.removeEventListener('touchcancel', this._onTouchFinished);
 			this._coordinator._onDragEnd(this);
 		}
 		this._dragType = this.TYPE_NONE;
@@ -280,8 +293,8 @@ export default class InteractiveElement {
 		// Specifically, this method returns either Number.POSITIVE_INFINITY or a finite number.
 		// If POSITIVE_INFINITY is returned, dragging must not start on the item -- it is out of
 		//	consideration.
-		// If a finite number is returned, then it is the distance squared of the client point
-		//	to the item's central hotspot. In this case, dragging may start on the item, but priority
+		// If a finite number is returned, then it is the distance of the client point
+		//	to the item's hotspot. In this case, dragging may start on the item, but priority
 		//	should be given to any competing items with lower scores.
 
 		if (!this._coordinator.getCanDragInitOnElement(this)) {
@@ -295,14 +308,14 @@ export default class InteractiveElement {
 			}
 		} else if (type === this.TYPE_TOUCH) {
 
-			throw new Error('not implemented');
+			// TODO: ???
 
 		} else {
 			console.error('Unknown type.');
 			return Number.POSITIVE_INFINITY;
 		}
 
-		return 1;
+		return this._getDistanceOfClientPt(clientPt);
 	}
 
 
@@ -327,6 +340,92 @@ export default class InteractiveElement {
 	_onMouseFinished(e) {
 		e.preventDefault();
 		this._stopDragging();
+	}
+
+	/*
+	**	Touch Dragging Handlers
+	*/
+
+	_onTouchStart(e) {
+
+		console.group('onTouchStart');
+		console.log(e);
+		console.groupEnd();
+
+	}
+
+	_onTouchMove(e) {
+		this._updateAnyBackupTouches(e.changedTouches);
+		let touch = this._findActiveTouch(e.changedTouches);
+		if (touch !== null) {
+			this._updateDragging(touch.clientPt);
+		}
+	}
+
+	_onTouchFinished(e) {
+		this._stopTrackingAnyBackupTouches(e.changedTouches);
+		let touch = this._findActiveTouch(e.changedTouches);
+		if (touch !== null) {
+			// Active touch has is finished.
+			let backup = this._selectBackupTouch();
+			if (backup !== null) {
+				// A backup was found.
+				
+			} else {
+				// No backup found -- stop dragging.
+				this._stopDragging();
+			}
+		}
+	}
+
+
+	/*
+	**	Touch Helper Methods
+	*/
+
+	_selectBackupTouch() {
+
+
+
+	}
+
+	_stopTrackingAnyBackupTouches(touchList) {
+		// This method removes any of the given touches from the backup touches array.
+		for (let i = this._backupTouches.length - 1; i >= 0; --i) {
+			let id = this._backupTouches[i].id;
+			for (let touch of touchList) {
+				if (touch.identifier === id) {
+					this._backupTouches.splice(i, 1);
+					break;
+				}
+			}
+		}
+	}
+
+	_updateAnyBackupTouches(touchList) {
+		// This method updates any of the given touches that are in the backup touches array.
+		for (let touch of touchList) {
+			for (let backupTouch of this._backupTouches) {
+				if (touch.identifier === backupTouch.id) {
+					backupTouch.clientPt = {x: touch.clientX, y: touch.clientY};
+					break;
+				}
+			}
+		}
+	}
+
+	_findActiveTouch(touchList) {
+		// This method searches the given touchList and returns the active touch as an object
+		//	with id and clientPt properties, if found. Otherwise, null is returned.
+		for (let touch of touchList) {
+			if (touch.identifier === this._activeTouchId) {
+				return {
+					id: this._activeTouchId,
+					clientPt: {x: touch.clientX, y: touch.clientY},
+				};
+			}
+		}
+		return null;
 	}
 
 

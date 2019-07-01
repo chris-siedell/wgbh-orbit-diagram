@@ -6,7 +6,7 @@ astro.unl.edu
 */
 
 
-import MoonURL from '../graphics/orbit-diagram-placeholders_moon.svg';
+import MoonURL from '../graphics/Boston2_v1_moon.svg';
 
 import InteractiveElement from './InteractiveElement.js';
 
@@ -70,6 +70,14 @@ export default class Moon extends InteractiveElement {
 		
 		this._maxTouchHitAreaDistance = touchRadius;
 		this._maxMouseHitAreaDistance = this._DEFAULT_IMAGE_RADIUS;
+	}
+
+	_getDistanceOfClientPt(clientPt) {
+		// Distance is measured from the center of the moon.
+		let diagramPt = this._orbitDiagram.getDiagramPtForClientPt(clientPt);
+		let dx = diagramPt.x - this._x;
+		let dy = diagramPt.y - this._y;	
+		return Math.sqrt(dx*dx + dy*dy);
 	}
 
 	_getAngleForClientPt(clientPt) {

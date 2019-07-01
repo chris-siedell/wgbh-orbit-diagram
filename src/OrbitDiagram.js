@@ -8,7 +8,7 @@ astro.unl.edu
 
 import './css/OrbitDiagram.css';
 
-import SunURL from './graphics/orbit-diagram-placeholders_sun.svg';
+import SunURL from './graphics/Boston2_v1_sun.svg';
 
 import Moon from './js/Moon.js';
 import Earth from './js/Earth.js';
@@ -153,22 +153,24 @@ export default class OrbitDiagram {
 		this._needs_updateEarthAndMoon = false;
 	}
 
+	getDiagramPtForClientPt(clientPt) {
+		let bb = this._svg.getBoundingClientRect();
+		return {
+			x: clientPt.x - bb.left,
+			y: clientPt.y - bb.top,
+		};
+	}
 
 	getOrbitPtForClientPt(clientPt) {
-
 		let bb = this._svg.getBoundingClientRect();
-		
 		let orbitClientX = bb.left + this._orbitCenterX;
 		let orbitClientY = bb.top + this._orbitCenterY;
-		
 		let orbitPt = {
 			x: clientPt.x - orbitClientX,
 			y: clientPt.y - orbitClientY,
 		};
-
 		return orbitPt;
 	}
-
 	
 	_redoLayout() {
 

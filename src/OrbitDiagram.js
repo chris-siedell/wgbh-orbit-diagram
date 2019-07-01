@@ -2,15 +2,18 @@
 OrbitDiagram.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-06-29
+2019-07-01
 */
 
 
 import './css/OrbitDiagram.css';
 
+import SunURL from './graphics/orbit-diagram-placeholders_sun.svg';
 
 import Moon from './js/Moon.js';
 import Earth from './js/Earth.js';
+import InteractiveElementCoordinator from './js/InteractiveElementCoordinator.js';
+
 
 
 const svgNS = 'http://www.w3.org/2000/svg';
@@ -41,6 +44,18 @@ export default class OrbitDiagram {
 		this._svg.classList.add('wgbh-orbit-diagram-svg');
 		this._root.appendChild(this._svg);
 
+		this._sunGroup = document.createElementNS(svgNS, 'g');
+		this._svg.appendChild(this._sunGroup);
+
+		this._sun = document.createElementNS(svgNS, 'image');
+		this._sun.setAttribute('width', 100);
+		this._sun.setAttribute('height', 400);
+		this._sun.setAttribute('x', 0);
+		this._sun.setAttribute('y', -200);
+		this._sun.setAttributeNS(xlinkNS, 'href', SunURL);
+		this._sunGroup.appendChild(this._sun);
+
+
 		this._margin = 0.05;
 		this._earthSize = 0.2;
 
@@ -51,11 +66,15 @@ export default class OrbitDiagram {
 		this._orbit.setAttribute('fill', 'none');
 		this._svg.appendChild(this._orbit);
 
-		this._earth = new Earth();
+		this._coordinator = new InteractiveElementCoordinator(this);
+
+		this._earth = new Earth(this._coordinator, this);
 		this._svg.appendChild(this._earth.getElement());
 
-		this._moon = new Moon();
+		this._moon = new Moon(this._coordinator, this);
 		this._svg.appendChild(this._moon.getElement());
+
+		this._coordinator.checkRegistrations();
 
 		this._needs_redoLayout = true;
 	}
@@ -99,9 +118,11 @@ export default class OrbitDiagram {
 		if (this._timekeeper.getHasAnimationStateChanged()) {
 			let animState = this._timekeeper.getAnimationState();
 			if (animState === this._timekeeper.IDLE) {
-				// Do nothing.
+				// Allow dragging.
+				this._coordinator.setIsDraggingAllowed(true);
 			} else if (animState === this._timekeeper.PLAYING || animState === this._timekeeper.TRANSITIONING) {
-				// Cancel any active dragging.
+				// Forbid dragging. This call also cancels any active dragging.
+				this._coordinator.setIsDraggingAllowed(false);
 			} else {
 				console.error('Unknown animation state.');
 			}
@@ -130,6 +151,22 @@ export default class OrbitDiagram {
 		this._moon.setPosition(moonX, moonY);
 
 		this._needs_updateEarthAndMoon = false;
+	}
+
+
+	getOrbitPtForClientPt(clientPt) {
+
+		let bb = this._svg.getBoundingClientRect();
+		
+		let orbitClientX = bb.left + this._orbitCenterX;
+		let orbitClientY = bb.top + this._orbitCenterY;
+		
+		let orbitPt = {
+			x: clientPt.x - orbitClientX,
+			y: clientPt.y - orbitClientY,
+		};
+
+		return orbitPt;
 	}
 
 	
@@ -167,6 +204,11 @@ export default class OrbitDiagram {
 
 		this._moon.setScale(this._moonScale);
 
+		let sunScale = this._height/400;
+		this._sunGroup.setAttribute('transform', 'translate(0, ' + (this._height/2) + ') scale('+sunScale+')');
+
+		console.log(this._orbitRadiusPx);
+
 		// For development: check for hit area overlap.
 		let minSafeOrbitRadiusForMouse = this._earth._maxMouseHitAreaDistance + this._moon._maxMouseHitAreaDistance;
 		if (minSafeOrbitRadiusForMouse > this._orbitRadiusPx) {
@@ -176,6 +218,7 @@ export default class OrbitDiagram {
 		if (minSafeOrbitRadiusForTouch > this._orbitRadiusPx) {
 			console.warn('The earth\'s and moon\'s touch hit areas will overlap.');
 		}
+
 
 		this._needs_redoLayout = false;
 

@@ -2,12 +2,12 @@
 src/js/Earth.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-06-30
+2019-07-01
 */
 
 
-import EarthURL from '../graphics/orbit-diagram-earth.svg';
-import EarthFocusURL from '../graphics/orbit-diagram-earth-focus.svg';
+import EarthURL from '../graphics/orbit-diagram-placeholders_earth.svg';
+import StickfigureURL from '../graphics/orbit-diagram-placeholders_stickfigure.svg';
 
 import InteractiveElement from './InteractiveElement.js';
 
@@ -18,41 +18,100 @@ const xlinkNS = 'http://www.w3.org/1999/xlink';
 export default class Earth extends InteractiveElement {
 
 
-	constructor() {
-		super();
-
-		this._debugName = 'Earth';
+	constructor(coordinator, orbitDiagram) {
+		super(coordinator, orbitDiagram);
 
 		this._DEFAULT_IMAGE_RADIUS = 50;
 
-		this._outerGroup = document.createElementNS(svgNS, 'g');
+//		this._outerGroup = document.createElementNS(svgNS, 'g');
+//
+//		this._innerGroup = document.createElementNS(svgNS, 'g');
+//		this._outerGroup.appendChild(this._innerGroup);
+//
+//		this._focus = document.createElementNS(svgNS, 'image');
+//		this._focus.setAttribute('width', 130);
+//		this._focus.setAttribute('height', 150);
+//		this._focus.setAttribute('x', -65);
+//		this._focus.setAttribute('y', -85);
+//		this._focus.setAttributeNS(xlinkNS, 'href', EarthFocusURL);
+//		this._innerGroup.appendChild(this._focus);
+//
+//		this._shadowed = document.createElementNS(svgNS, 'image');
+//		this._shadowed.setAttribute('width', 130);
+//		this._shadowed.setAttribute('height', 150);
+//		this._shadowed.setAttribute('x', -65);
+//		this._shadowed.setAttribute('y', -85);
+//		this._shadowed.setAttributeNS(xlinkNS, 'href', EarthURL);
+//		this._innerGroup.appendChild(this._shadowed);
 
-		this._innerGroup = document.createElementNS(svgNS, 'g');
-		this._outerGroup.appendChild(this._innerGroup);
+		this._filter = document.createElementNS(svgNS, 'filter');
+		this._filter.setAttribute('id', 'stickfigure-filter');
+		
+		this._filterMatrix = document.createElementNS(svgNS, 'feColorMatrix');
+		this._filterMatrix.setAttribute('in', 'SourceGraphic');
+		this._filterMatrix.setAttribute('type', 'matrix');
+		let n = '1';
+		this._filterMatrix.setAttribute('values', n + ' 0 0 0 0  0 ' + n + ' 0 0 0  0 0 ' + n + ' 0 0  0 0 0 1 0');
+		this._filter.appendChild(this._filterMatrix);
+		this._unshadowed.appendChild(this._filter);
 
-		this._focus = document.createElementNS(svgNS, 'image');
-		this._focus.setAttribute('width', 130);
-		this._focus.setAttribute('height', 150);
-		this._focus.setAttribute('x', -65);
-		this._focus.setAttribute('y', -85);
-		this._focus.setAttributeNS(xlinkNS, 'href', EarthFocusURL);
-		this._innerGroup.appendChild(this._focus);
-
-		this._shadowed = document.createElementNS(svgNS, 'image');
-		this._shadowed.setAttribute('width', 130);
-		this._shadowed.setAttribute('height', 150);
-		this._shadowed.setAttribute('x', -65);
-		this._shadowed.setAttribute('y', -85);
-		this._shadowed.setAttributeNS(xlinkNS, 'href', EarthURL);
-		this._innerGroup.appendChild(this._shadowed);
+		this._stickfigure = document.createElementNS(svgNS, 'image');
+		this._stickfigure.setAttribute('width', 130);
+		this._stickfigure.setAttribute('height', 150);
+		this._stickfigure.setAttribute('x', -65);
+		this._stickfigure.setAttribute('y', -85);
+		this._stickfigure.setAttributeNS(xlinkNS, 'href', StickfigureURL);
+		this._stickfigure.setAttribute('filter', 'url(#stickfigure-filter)');
+		this._unshadowed.appendChild(this._stickfigure);
 
 		this._touchHitArea = document.createElementNS(svgNS, 'path');
-		this._innerGroup.appendChild(this._touchHitArea);
+//		this._innerGroup.appendChild(this._touchHitArea);
 
 		this._mouseHitArea = document.createElementNS(svgNS, 'path');
-		this._innerGroup.appendChild(this._mouseHitArea);
+//		this._innerGroup.appendChild(this._mouseHitArea);
 
-		super._init();
+		this._imageURL = EarthURL;
+
+		super._initAs('earth');
+	}
+
+
+	setRotation(degrees) {
+		super.setRotation(degrees);
+
+		let time = this._orbitDiagram._timekeeper.getTime();
+
+		const ep = 0.03;
+		const darkestLevel = 0.2;
+		const range = 0.7;
+		const power = 3;
+
+		let dawnBegin = 0.25 - ep;
+		let dawnEnd = 0.25 + ep;
+		let duskBegin = 0.75 - ep;
+		let duskEnd = 0.75 + ep;
+
+		let f = time.fractionalTimeOfDay;
+
+		let u = 0;
+
+		if (f < dawnBegin) {
+			u = 0;
+		} else if (f < dawnEnd) {
+			u = (f - dawnBegin)/(dawnEnd - dawnBegin);
+		} else if (f < duskBegin) {
+			u = 1;
+		} else if (f < duskEnd) {
+			u = 1 - (f - duskBegin)/(duskEnd - duskBegin);
+		} else {
+			u = 0;
+		}
+
+		let level = darkestLevel + range*Math.pow(u, power);
+
+		console.log(u+', '+level);
+		let n = level.toString();
+		this._filterMatrix.setAttribute('values', n + ' 0 0 0 0  0 ' + n + ' 0 0 0  0 0 ' + n + ' 0 0  0 0 0 1 0');
 	}
 
 
@@ -146,5 +205,25 @@ export default class Earth extends InteractiveElement {
 		this._maxMouseHitAreaDistance = this._scale * H;
 	}
 
+	_getAngleForClientPt(clientPt) {
+		let orbitPt = this._orbitDiagram.getOrbitPtForClientPt(clientPt);
+		// orbitAngle goes CW from x-axis.
+		let orbitAngle = Math.atan2(orbitPt.y, orbitPt.x);
+		// angle (for the earth) goes CCW from neg-y-axis.
+		return 1.5*Math.PI - orbitAngle;
+	}
+
+	_getCurrAngle() {
+		let time = this._orbitDiagram._timekeeper.getTime();
+		return 2*Math.PI*time.fractionalTimeOfDay;
+	}
+
+	_getDeltaObjForRotations(rotations) {
+		return {
+			fractionalDays: rotations,
+		};
+	}
+
 }
+
 

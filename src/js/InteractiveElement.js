@@ -2,7 +2,7 @@
 src/js/InteractiveElement.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-07-01
+2019-07-02
 */
 
 
@@ -10,6 +10,13 @@ astro.unl.edu
 const svgNS = 'http://www.w3.org/2000/svg';
 const xlinkNS = 'http://www.w3.org/1999/xlink';
 
+/*
+
+The dragging code here borrows heavily from the DraggableItemMixin in phase-positions-demo. One feature
+	of that mixin that was not copied is "competing drag items". That feature is not necessary unless the
+	diagram is drawn at such a scale that the earth and moon hit areas overlap.
+
+*/
 
 
 
@@ -67,6 +74,10 @@ export default class InteractiveElement {
 		// The MIN_TOUCH_RADIUS constant is meant to provide guidance to the _drawHitAreas function
 		//	so that the touch interaction areas are not too small.
 		this._MIN_TOUCH_RADIUS = 24;
+
+
+		this._MAX_BACKUP_TOUCH_DISTANCE = 80;
+
 
 		// The parent OrbitDiagram takes responsibility for calculating the moon or earth's
 		//	position, rotation, and scale.
@@ -209,17 +220,26 @@ export default class InteractiveElement {
 
 
 	/*
-	**	Dragging
+	**	Public Methods
 	*/
 
 	cancelDragging() {
-		console.log(this._identity+': cancelDragging');
+		// It is safe to call this method even when not dragging.
 		this._stopDragging();
 	}
 
-	_startDragging(clientPt, type) {
 
-		console.log('start dragging, hotspot distance: ' + this._getDistanceOfClientPt(clientPt));
+	/*
+	**	Internal General Dragging Methods
+	*/
+
+	_startDragging(clientPt, type) {
+		// Calling code must have already determined that dragging may be started.
+
+		console.group('_startDragging, type: '+type);
+		console.log('clientPt: '+clientPt.toString());
+		console.log('distance: ' + this._getDistanceOfClientPt(clientPt));
+		console.groupEnd();
 
 		if (type === this.TYPE_MOUSE) {
 			document.addEventListener('mousemove', this._onMouseMove);
@@ -234,15 +254,18 @@ export default class InteractiveElement {
 			return;
 		}
 
-		this._dragType = type;
+		this._backupTouches = [];
 
-		this._dragInitOpaqueTime = this._orbitDiagram._timekeeper.getTime().opaqueTime;	
-	
-		this._dragAngleOffset = this._getCurrAngle() - this._getAngleForClientPt(clientPt);
-		
+		this._dragType = type;
 		this._dragRotations = 0;
+		this._dragInitOpaqueTime = this._orbitDiagram._timekeeper.getTime().opaqueTime;	
+		this._calcDragAngleOffset(clientPt);	
 		
 		this._coordinator._onDragBegin(this);
+	}
+
+	_calcDragAngleOffset(clientPt) {
+		this._dragAngleOffset = this._getCurrAngle() - this._getAngleForClientPt(clientPt);
 	}
 
 	_updateDragging(clientPt) {
@@ -264,7 +287,6 @@ export default class InteractiveElement {
 
 		this._orbitDiagram._timekeeper.setTimeByDelta(deltaObj);
 	}
-
 
 	_stopDragging() {
 		if (this._dragType === this.TYPE_MOUSE) {
@@ -348,16 +370,72 @@ export default class InteractiveElement {
 
 	_onTouchStart(e) {
 
-		console.group('onTouchStart');
+		console.group('_onTouchStart');
 		console.log(e);
 		console.groupEnd();
 
+		// Multiple touches may start at the same time, and they may start
+		//	during an ongoing dragging session.
+
+		// Process the touches and populate the newTouches list. After this step
+		//	newTouches contains objects with these properties:
+		//		id - the new touch's identifier,
+		//		clientPt - the new touch's location.
+		// New touches that are excluded from dragging (i.e. have an infinite score) are
+		//	not included in newTouches. It is possible that after this step newTouches
+		//	will be empty.
+		// Also, keep track of the best (lowest-scoring) new touch.
+
+		let newTouches = [];
+		let bestScore = Number.POSITIVE_INFINITY;
+		let bestTouch = null;
+		let bestIndex = -1;
+		for (let touch of e.changedTouches) {
+			let clientPt = {x: touch.clientX, y: touch.clientY};
+			let score = this._getDragInitScore(clientPt, this.TYPE_TOUCH);
+			if (Number.isFinite(score)) {
+				let processedTouch = {
+					id: touch.identifier,
+					clientPt: clientPt,
+				};
+				let index = newTouches.push(processedTouch);
+				if (score < bestScore) {
+					bestScore = score;
+					bestTouch = processedTouch;
+					bestIndex = index;
+				}
+			}
+		}
+
+		if (newTouches.length === 0) {
+			// Nothing to do.
+			return;
+		}
+
+		// If already dragging the new touches will become backup touches. Otherwise, the
+		//	best new touch will be used to start dragging and the rest (if any) will become
+		//	backup touches.
+
+		if (this.getIsBeingDragged()) {
+			Array.prototype.push.apply(this._backupTouches, newTouches);
+		} else {
+
+			e.preventDefault();
+
+			this._activeTouchId = bestTouch.id;
+			this._startDragging(bestTouch.clientPt, this.TYPE_TOUCH);
+
+			// _startDragging automatically resets the _backupTouches array.
+			newTouches.splice(bestIndex, 1);
+			Array.prototype.push.apply(this._backupTouches, newTouches);
+		}		
 	}
 
 	_onTouchMove(e) {
 		this._updateAnyBackupTouches(e.changedTouches);
 		let touch = this._findActiveTouch(e.changedTouches);
 		if (touch !== null) {
+			e.preventDefault();
 			this._updateDragging(touch.clientPt);
 		}
 	}
@@ -366,13 +444,9 @@ export default class InteractiveElement {
 		this._stopTrackingAnyBackupTouches(e.changedTouches);
 		let touch = this._findActiveTouch(e.changedTouches);
 		if (touch !== null) {
-			// Active touch has is finished.
-			let backup = this._selectBackupTouch();
-			if (backup !== null) {
-				// A backup was found.
-				
-			} else {
-				// No backup found -- stop dragging.
+			// The active touch has finished.
+			let success = this._switchToBackupTouch();
+			if (!success) {
 				this._stopDragging();
 			}
 		}
@@ -383,10 +457,40 @@ export default class InteractiveElement {
 	**	Touch Helper Methods
 	*/
 
-	_selectBackupTouch() {
+	_switchToBackupTouch() {
+		// This method finds the best, qualifying backup touch and makes it the
+		//	active touch, assuming such a touch was found. It returns a bool
+		//	indicating whether the switch was made.
+		// This method assumes touch dragging is already ongoing.
+		// The best touch will be the closest touch to the element whose distance
+		//	is also less than the maximum backup touch distance. It is possible that
+		//	there is no suitable backup touch.
 
+		let bestDistance = Number.POSITIVE_INFINITY;
+		let bestTouch = null;
+		let bestIndex = -1;
 
+		for (let i = 0; i < this._backupTouches.length; ++i) {
+			let touch = this._backupTouches[i];
+			let distance = this._getDistanceOfClientPt(touch.clientPt);
+			if (distance <= this._MAX_BACKUP_TOUCH_DISTANCE) {
+				// The backup touch is qualifying.
+				if (distance < bestDistance) {
+					bestDistance = distance;
+					bestTouch = touch;
+					bestIndex = i;
+				}
+			}
+		}
 
+		if (bestTouch !== null) {
+			this._backupTouches.splice(bestIndex, 1);
+			this._activeTouchId = bestTouch.id;
+			this._calcDragAngleOffset(bestTouch.clientPt);
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	_stopTrackingAnyBackupTouches(touchList) {
@@ -403,7 +507,8 @@ export default class InteractiveElement {
 	}
 
 	_updateAnyBackupTouches(touchList) {
-		// This method updates any of the given touches that are in the backup touches array.
+		// This method updates the positions any of the given touches that are also
+		//	in the backup touches array.
 		for (let touch of touchList) {
 			for (let backupTouch of this._backupTouches) {
 				if (touch.identifier === backupTouch.id) {

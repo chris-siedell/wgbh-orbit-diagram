@@ -105,10 +105,6 @@ export default class InteractiveElement {
 			throw new Error('Unknown identity.');
 		}
 
-		// These properties must stay in sync.
-		this._isRollOverHighlightVisible = false;
-//		this._focus.setAttribute('visibility', 'hidden');
-
 		this._onMouseEnter = this._onMouseEnter.bind(this);
 		this._onMouseLeaveLocal = this._onMouseLeaveLocal.bind(this);
 
@@ -151,6 +147,12 @@ export default class InteractiveElement {
 
 		this._interactive.appendChild(this._touchHitArea);
 		this._interactive.appendChild(this._mouseHitArea);
+
+		this._cursor = null;
+		//this._mouseHitArea.style.cursor = this._cursor;
+
+		this._showHighlight = false;
+//		this._highlight.setAttribute('visibility', 'hidden');
 
 		this._createImage();
 		this._createShadow();
@@ -262,6 +264,10 @@ export default class InteractiveElement {
 		this._calcDragAngleOffset(clientPt);	
 		
 		this._coordinator._onDragBegin(this);
+		this.updateCursor();
+		this.updateHighlight();
+		this._otherElement.updateCursor();
+		this._otherElement.updateHighlight();
 	}
 
 	_calcDragAngleOffset(clientPt) {
@@ -289,18 +295,26 @@ export default class InteractiveElement {
 	}
 
 	_stopDragging() {
+		let didStop = false;
 		if (this._dragType === this.TYPE_MOUSE) {
 			document.removeEventListener('mousemove', this._onMouseMove);
 			document.removeEventListener('mouseup', this._onMouseFinished);
 			document.removeEventListener('mouseleave', this._onMouseFinished);
-			this._coordinator._onDragEnd(this);
+			didStop = true;
 		} else if (this._dragType === this.TYPE_TOUCH) {
 			document.removeEventListener('touchmove', this._onTouchMove);
 			document.removeEventListener('touchend', this._onTouchFinished);
 			document.removeEventListener('touchcancel', this._onTouchFinished);
-			this._coordinator._onDragEnd(this);
+			didStop = true;
 		}
 		this._dragType = this.TYPE_NONE;
+		if (didStop) {
+			this._coordinator._onDragEnd(this);
+			this.updateCursor();
+			this.updateHighlight();
+			this._otherElement.updateCursor();
+			this._otherElement.updateHighlight();
+		}
 	}
 
 	getIsBeingDragged() {
@@ -544,30 +558,65 @@ export default class InteractiveElement {
 
 	_onMouseEnter() {
 		this._isMouseOver = true;
-		this._coordinator.updateRollOverHighlightForElement(this);
+		this.updateCursor();
+		this.updateHighlight();
 	}
 
 	_onMouseLeaveLocal() {
 		this._isMouseOver = false;
-		this._coordinator.updateRollOverHighlightForElement(this);
+		this.updateCursor();
+		this.updateHighlight();
 	}
 
-	getIsRollOverHighlightVisible() {
-		return this._isRollOverHighlightVisible;
-	}
+//	getIsRollOverHighlightVisible() {
+//		return this._isRollOverHighlightVisible;
+//	}
 
-	setIsRollOverHighlightVisible(arg) {
-		arg = Boolean(arg);
-		if (arg === this._isRollOverHighlightVisible) {
+	updateCursor() {
+		let cursor = null; // null means no cursor request for this element
+		if (this._dragType === this.TYPE_MOUSE) {
+			cursor = 'grabbing';
+		} else if (this._isMouseOver && this._coordinator.getCanDragStartOnElement(this)) {
+			cursor = 'grab';
+		}
+		if (cursor === this._cursor) {
 			return;
 		}
-		this._isRollOverHighlightVisible = arg;
-//		if (this._isRollOverHighlightVisible) {
-//			this._focus.setAttribute('visibility', 'visible');
-//		} else {
-//			this._focus.setAttribute('visibility', 'hidden');
-//		}
+		this._cursor = cursor;
+		this._coordinator.setCursor(this._identity, cursor);
 	}
+
+	updateHighlight() {
+		// Rules for the highlight:
+		//	- appears for mouse roll-over when dragging is allowed,
+		//	- appears when dragging is ongoing,
+		//	- stays on for the duration of dragging, even if the pointer moves off the element.
+		let showHighlight = false;
+		if (this.getIsBeingDragged()) {
+			showHighlight = true;
+		} else if (this._isMouseOver && this._coordinator.getCanDragStartOnElement(this)) {
+			showHighlight = true;
+		}
+		if (showHighlight === this._showHighlight) {
+			return;
+		}
+		this._showHighlight = showHighlight;
+		// TODO
+		console.log(this._identity+', showHighlight: '+this._showHighlight);
+	}
+
+//	setIsRollOverHighlightVisible(arg) {
+//		arg = Boolean(arg);
+//		if (arg === this._isRollOverHighlightVisible) {
+//			return;
+//		}
+//		this._isRollOverHighlightVisible = arg;
+//		if (this._isRollOverHighlightVisible) {
+////			this._focus.setAttribute('visibility', 'visible');
+//		} else {
+////			this._focus.setAttribute('visibility', 'hidden');
+//		}
+//	}
 
 }
 

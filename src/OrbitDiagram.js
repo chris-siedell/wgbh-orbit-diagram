@@ -74,6 +74,10 @@ export default class OrbitDiagram {
 		this._moon = new Moon(this._coordinator, this);
 		this._svg.appendChild(this._moon.getElement());
 
+
+		this._moon._otherElement = this._earth;
+		this._earth._otherElement = this._moon;
+
 		this._coordinator.checkRegistrations();
 
 		this._needs_redoLayout = true;

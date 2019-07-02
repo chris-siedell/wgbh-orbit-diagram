@@ -33,6 +33,18 @@ export default class InteractiveElement {
 		this.TYPE_TOUCH = 'touch';
 		this.TYPE_NONE = 'none';
 
+
+
+
+		this._focusStroke = 'white';
+		this._focusStrokeWidth = 6;
+		this._highlightFill = 'rgba(255, 255, 255, 0.5)';
+		this._focusStrokeOffset = 6;
+
+
+
+
+
 		// Subclasses must do the following:
 
 		// 1. Define the following constants in constructor:
@@ -64,8 +76,8 @@ export default class InteractiveElement {
 
 		this._isMouseOver = false;
 
-		this._touchHitAreaFill = 'rgba(255, 0, 255, 0.4)';
-		this._mouseHitAreaFill = 'rgba(0, 255, 0, 0.4)';
+		this._touchHitAreaFill = 'rgba(255, 0, 255, 0)';
+		this._mouseHitAreaFill = 'rgba(0, 255, 0, 0)';
 		
 
 		// These get defined by the subclass.
@@ -91,6 +103,8 @@ export default class InteractiveElement {
 		this._y = 0;
 
 		this._unshadowed = document.createElementNS(svgNS, 'g');
+
+
 	}
 
 	_initAs(identity) {
@@ -124,6 +138,19 @@ export default class InteractiveElement {
 		this._innerGroup = document.createElementNS(svgNS, 'g');
 		this._outerGroup.appendChild(this._innerGroup);
 
+
+		let highlightFilter = document.createElementNS(svgNS, 'filter');
+		highlightFilter.setAttribute('id', identity+'-highlight-filter');
+
+		let blur = document.createElementNS(svgNS, 'feGaussianBlur');
+		blur.setAttribute('in', 'SourceGraphic');
+		blur.setAttribute('stdDeviation', 5);
+		highlightFilter.appendChild(blur);
+
+		this._innerGroup.appendChild(highlightFilter);
+		this._innerGroup.appendChild(this._highlight);
+		this._highlight.setAttribute('filter', 'url(#'+identity+'-highlight-filter)');
+
 		this._shadowed = document.createElementNS(svgNS, 'g');
 
 		this._shadowedMask = document.createElementNS(svgNS, 'mask');
@@ -142,6 +169,9 @@ export default class InteractiveElement {
 
 		this._innerGroup.appendChild(this._unshadowed);
 
+
+		this._innerGroup.appendChild(this._focus);
+
 		this._interactive = document.createElementNS(svgNS, 'g');
 		this._innerGroup.appendChild(this._interactive);
 
@@ -152,7 +182,7 @@ export default class InteractiveElement {
 		//this._mouseHitArea.style.cursor = this._cursor;
 
 		this._showHighlight = false;
-//		this._highlight.setAttribute('visibility', 'hidden');
+		this._highlight.setAttribute('visibility', 'hidden');
 
 		this._createImage();
 		this._createShadow();
@@ -166,7 +196,27 @@ export default class InteractiveElement {
 
 		this._mouseHitArea.addEventListener('mousedown', this._onMouseDown);
 		this._interactive.addEventListener('touchstart', this._onTouchStart);
+
+
+		// Tab
+		this._mouseHitArea.classList.add('wgbh-orbit-diagram-element-focusarea');
+
+		/*
+		this._mouseHitArea.tabIndex = 0;
+
+		this._mouseHitArea.addEventListener('focus', (e) => {
+			this._focus.setAttribute('visibility', 'visible');
+		});
+		this._mouseHitArea.addEventListener('blur', (e) => {
+			this._focus.setAttribute('visibility', 'hidden');
+		});
+		*/
+
+		this._focus.setAttribute('visibility', 'hidden');
+
+
 	}
+
 
 	_createShadow() {
 		let D = this._DEFAULT_IMAGE_RADIUS + 5;
@@ -217,6 +267,8 @@ export default class InteractiveElement {
 		this._image.setAttribute('transform', rotate);
 		this._interactive.setAttribute('transform', rotate);
 		this._unshadowed.setAttribute('transform', rotate);
+		this._focus.setAttribute('transform', rotate);
+		this._highlight.setAttribute('transform', rotate);
 		this._innerGroup.setAttribute('transform', scale);
 	}
 
@@ -238,10 +290,10 @@ export default class InteractiveElement {
 	_startDragging(clientPt, type) {
 		// Calling code must have already determined that dragging may be started.
 
-		console.group('_startDragging, type: '+type);
-		console.log('clientPt: '+clientPt.toString());
-		console.log('distance: ' + this._getDistanceOfClientPt(clientPt));
-		console.groupEnd();
+//		console.group('_startDragging, type: '+type);
+//		console.log('clientPt: '+clientPt.toString());
+//		console.log('distance: ' + this._getDistanceOfClientPt(clientPt));
+//		console.groupEnd();
 
 		if (type === this.TYPE_MOUSE) {
 			document.addEventListener('mousemove', this._onMouseMove);
@@ -601,22 +653,12 @@ export default class InteractiveElement {
 			return;
 		}
 		this._showHighlight = showHighlight;
-		// TODO
-		console.log(this._identity+', showHighlight: '+this._showHighlight);
+		if (this._showHighlight) {
+			this._highlight.setAttribute('visibility', 'visible');
+		} else {
+			this._highlight.setAttribute('visibility', 'hidden');
+		}
 	}
-
-//	setIsRollOverHighlightVisible(arg) {
-//		arg = Boolean(arg);
-//		if (arg === this._isRollOverHighlightVisible) {
-//			return;
-//		}
-//		this._isRollOverHighlightVisible = arg;
-//		if (this._isRollOverHighlightVisible) {
-////			this._focus.setAttribute('visibility', 'visible');
-//		} else {
-////			this._focus.setAttribute('visibility', 'hidden');
-//		}
-//	}
 
 }
 

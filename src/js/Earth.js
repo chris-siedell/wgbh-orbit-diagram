@@ -72,6 +72,20 @@ export default class Earth extends InteractiveElement {
 
 		this._imageURL = EarthURL;
 
+
+		this._focus = document.createElementNS(svgNS, 'g');
+		this._focusRing = document.createElementNS(svgNS, 'path');
+		this._focusRing.setAttribute('stroke', this._focusStroke);
+		this._focusRing.setAttribute('stroke-width', this._focusStrokeWidth);
+		this._focusRing.setAttribute('fill', 'none');
+		this._focus.appendChild(this._focusRing);
+
+
+		this._highlight = document.createElementNS(svgNS, 'g');
+		this._highlightArea = document.createElementNS(svgNS, 'path');
+		this._highlightArea.setAttribute('fill', this._highlightFill);
+		this._highlight.appendChild(this._highlightArea);
+
 		super._initAs('earth');
 	}
 
@@ -109,7 +123,7 @@ export default class Earth extends InteractiveElement {
 
 		let level = darkestLevel + range*Math.pow(u, power);
 
-		console.log(u+', '+level);
+//		console.log(u+', '+level);
 		let n = level.toString();
 		this._filterMatrix.setAttribute('values', n + ' 0 0 0 0  0 ' + n + ' 0 0 0  0 0 ' + n + ' 0 0  0 0 0 1 0');
 	}
@@ -203,7 +217,44 @@ export default class Earth extends InteractiveElement {
 
 		this._maxTouchHitAreaDistance = this._scale * touchH;
 		this._maxMouseHitAreaDistance = this._scale * H;
+
+		this._redrawOtherStuff();
 	}
+
+
+	_redrawOtherStuff() {
+
+		// The hit areas for the globe include a protrusion for the stickfigure.
+		// alpha is the angle on the globe subtended by half of the stickfigure.
+		// H is the height of the stickfigure protrusion from the center of the earth.
+		// W controls the pointy-ness of the protrusion (0 is pointy, 1 is rounded).
+		const alphaDegrees = 15;
+		const H = 75 * this._scale;
+		const W = 1;
+
+		let alpha = (alphaDegrees/360)*2*Math.PI;
+		let R = this._radius + this._focusStrokeOffset;
+
+		let x0 = R*Math.cos(0.5*Math.PI + alpha);
+		let y0 = -R*Math.sin(0.5*Math.PI + alpha);
+		let x1 = R*Math.cos(0.5*Math.PI - alpha);
+		let y1 = -R*Math.sin(0.5*Math.PI - alpha);
+		let x2 = W*R*Math.sin(alpha);
+		let y2 = -H - this._focusStrokeOffset;
+		let x3 = 0;
+		let y3 = -H - this._focusStrokeOffset;
+
+		let d = 'M ' + x0 + ' ' + y0;
+		d += ' A ' + R + ' ' + R + ' 0 1 0 ' + x1 + ' ' + y1;
+		d += ' Q ' + x2 + ' ' + y2 + ' ' + x3 + ' ' + y3;
+		d += ' T ' + x0 + ' ' + y0 + ' Z';
+
+		this._focusRing.setAttribute('d' , d);
+
+		this._highlightArea.setAttribute('d', d);
+	}
+
+
 
 	_getDistanceOfClientPt(clientPt) {
 		// Distance is measured from observer's location on the globe.

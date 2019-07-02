@@ -9,7 +9,7 @@ astro.unl.edu
 .wgbh-orbit-diagram-root {
 	background-color: black;
 	position: absolute;
-	top: 240px;
+	top: 270px; /* TODO */
 	left: 0;
 	width: 100%;
 	height: 500px;
@@ -39,4 +39,11 @@ astro.unl.edu
 	height: 100%;
 }
 
+.wgbh-orbit-diagram-element-focusarea:focus {
+	outline: none;
+	border: none;
+}
 
+.wgbh-orbit-diagram-element-focusarea::-moz-focus-inner {
+	border: none;
+}

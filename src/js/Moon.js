@@ -27,6 +27,23 @@ export default class Moon extends InteractiveElement {
 
 		this._imageURL = MoonURL;
 
+
+
+		this._focus = document.createElementNS(svgNS, 'g');
+
+		this._focusRing = document.createElementNS(svgNS, 'circle');
+		this._focusRing.setAttribute('cx', 0);
+		this._focusRing.setAttribute('cy', 0);
+		this._focusRing.setAttribute('stroke', this._focusStroke);
+		this._focusRing.setAttribute('stroke-width', this._focusStrokeWidth);
+		this._focusRing.setAttribute('fill', 'none');
+		this._focus.appendChild(this._focusRing);
+
+		this._highlight = document.createElementNS(svgNS, 'g');
+		this._highlightDisc = document.createElementNS(svgNS, 'circle');
+		this._highlightDisc.setAttribute('fill', this._highlightFill);
+		this._highlight.appendChild(this._highlightDisc);
+
 		super._initAs('moon');
 
 //		this._outerGroup = document.createElementNS(svgNS, 'g');
@@ -70,7 +87,20 @@ export default class Moon extends InteractiveElement {
 		
 		this._maxTouchHitAreaDistance = touchRadius;
 		this._maxMouseHitAreaDistance = this._DEFAULT_IMAGE_RADIUS;
+
+		this._moreRedrawing();
 	}
+
+
+	_moreRedrawing() {
+
+		let R = this._radius + this._focusStrokeOffset;
+
+		this._focusRing.setAttribute('r', R);
+		this._highlightDisc.setAttribute('r', R);
+	}
+
+
 
 	_getDistanceOfClientPt(clientPt) {
 		// Distance is measured from the center of the moon.

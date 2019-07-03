@@ -2,7 +2,7 @@
 OrbitDiagram.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-07-01
+2019-07-03
 */
 
 
@@ -13,7 +13,7 @@ import SunURL from './graphics/Boston2_v1_sun.svg';
 import Moon from './js/Moon.js';
 import Earth from './js/Earth.js';
 import InteractiveElementCoordinator from './js/InteractiveElementCoordinator.js';
-
+import HintsOverlay from './js/HintsOverlay.js';
 
 
 const svgNS = 'http://www.w3.org/2000/svg';
@@ -39,10 +39,15 @@ export default class OrbitDiagram {
 
 		this._root = document.createElement('div');
 		this._root.classList.add('wgbh-orbit-diagram-root');
+		
+		this._hints = new HintsOverlay();
+		this._root.appendChild(this._hints.getImg());
 
 		this._svg = document.createElementNS(svgNS, 'svg');
 		this._svg.classList.add('wgbh-orbit-diagram-svg');
 		this._root.appendChild(this._svg);
+
+		this._root.appendChild(this._hints.getText());
 
 		this._sunGroup = document.createElementNS(svgNS, 'g');
 		this._svg.appendChild(this._sunGroup);
@@ -80,9 +85,21 @@ export default class OrbitDiagram {
 
 		this._coordinator.checkRegistrations();
 
+
+
+		this._dismissHints = this._dismissHints.bind(this);
+
+		document.addEventListener('mousedown', this._dismissHints);
+		document.addEventListener('touchstart', this._dismissHints);
+
 		this._needs_redoLayout = true;
 	}
 
+	_dismissHints() {
+		this._hints.dismiss();
+		document.removeEventListener('mousedown', this._dismissHints);
+		document.removeEventListener('touchstart', this._dismissHints);
+	}
 
 	getElement() {
 		return this._root;
@@ -213,7 +230,7 @@ export default class OrbitDiagram {
 		let sunScale = this._height/400;
 		this._sunGroup.setAttribute('transform', 'translate(0, ' + (this._height/2) + ') scale('+sunScale+')');
 
-		console.log(this._orbitRadiusPx);
+		//console.log(this._orbitRadiusPx);
 
 		// For development: check for hit area overlap.
 		let minSafeOrbitRadiusForMouse = this._earth._maxMouseHitAreaDistance + this._moon._maxMouseHitAreaDistance;
@@ -225,6 +242,7 @@ export default class OrbitDiagram {
 			console.warn('The earth\'s and moon\'s touch hit areas will overlap.');
 		}
 
+		this._hints.setPosition(0.45*this._width, 0.28*this._height);
 
 		this._needs_redoLayout = false;
 

@@ -255,15 +255,20 @@ export default class Earth extends InteractiveElement {
 	}
 
 
+	getHotspotPosition() {
+		let radians = this._rotationDegrees * Math.PI/180;
+		return {
+			x: this._x + this._radius*Math.sin(radians),
+			y: this._y - this._radius*Math.cos(radians),
+		};
+	}
 
 	_getDistanceOfClientPt(clientPt) {
 		// Distance is measured from observer's location on the globe.
 		let diagramPt = this._orbitDiagram.getDiagramPtForClientPt(clientPt);
-		let radians = this._rotationDegrees * Math.PI/180;
-		let x = this._x + this._radius*Math.sin(radians);
-		let y = this._y - this._radius*Math.cos(radians);
-		let dx = diagramPt.x - x;
-		let dy = diagramPt.y - y;	
+		let hPt = this.getHotspotPosition();
+		let dx = diagramPt.x - hPt.x;
+		let dy = diagramPt.y - hPt.y;	
 		return Math.sqrt(dx*dx + dy*dy);
 	}
 

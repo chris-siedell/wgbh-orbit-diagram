@@ -100,7 +100,12 @@ export default class Moon extends InteractiveElement {
 		this._highlightDisc.setAttribute('r', R);
 	}
 
-
+	getHotspotPosition() {
+		return {
+			x: this._x,
+			y: this._y,
+		};
+	}
 
 	_getDistanceOfClientPt(clientPt) {
 		// Distance is measured from the center of the moon.

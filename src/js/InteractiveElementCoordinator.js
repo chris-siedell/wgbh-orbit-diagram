@@ -135,10 +135,12 @@ export default class InteractiveElementCoordinator {
 	*/
 
 	updateAllDecorations() {
-		this._moon.updateHighlight();
-		this._earth.updateHighlight();
-		this._moon.updateCursor();
-		this._earth.updateCursor();
+		this._earth.updateAppearance();
+		this._moon.updateAppearance();
+//		this._moon.updateHighlight();
+//		this._earth.updateHighlight();
+//		this._moon.updateCursor();
+//		this._earth.updateCursor();
 	}
 
 //	updateRollOverHighlightForElement(element) {

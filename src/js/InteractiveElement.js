@@ -136,7 +136,6 @@ export default class InteractiveElement {
 		this._outerGroup = document.createElementNS(svgNS, 'g');
 
 		this._innerGroup = document.createElementNS(svgNS, 'g');
-		this._outerGroup.appendChild(this._innerGroup);
 
 
 		let highlightFilter = document.createElementNS(svgNS, 'filter');
@@ -147,8 +146,8 @@ export default class InteractiveElement {
 		blur.setAttribute('stdDeviation', 5);
 		highlightFilter.appendChild(blur);
 
-		this._innerGroup.appendChild(highlightFilter);
-		this._innerGroup.appendChild(this._highlight);
+		this._outerGroup.appendChild(highlightFilter);
+		this._outerGroup.appendChild(this._highlight);
 		this._highlight.setAttribute('filter', 'url(#'+identity+'-highlight-filter)');
 
 		this._shadowed = document.createElementNS(svgNS, 'g');
@@ -169,11 +168,11 @@ export default class InteractiveElement {
 
 		this._innerGroup.appendChild(this._unshadowed);
 
-
-		this._innerGroup.appendChild(this._focus);
-
 		this._interactive = document.createElementNS(svgNS, 'g');
 		this._innerGroup.appendChild(this._interactive);
+
+		this._outerGroup.appendChild(this._innerGroup);
+		this._outerGroup.appendChild(this._focus);
 
 		this._interactive.appendChild(this._touchHitArea);
 		this._interactive.appendChild(this._mouseHitArea);
@@ -181,8 +180,8 @@ export default class InteractiveElement {
 		this._cursor = null;
 		//this._mouseHitArea.style.cursor = this._cursor;
 
-		this._showHighlight = false;
-		this._highlight.setAttribute('visibility', 'hidden');
+		this._showHighlight = true;//false;
+		this._highlight.setAttribute('visibility', 'visible');//'hidden');
 
 		this._createImage();
 		this._createShadow();
@@ -199,22 +198,72 @@ export default class InteractiveElement {
 
 
 		// Tab
-		this._mouseHitArea.classList.add('wgbh-orbit-diagram-element-focusarea');
+		this._outerGroup.classList.add('wgbh-orbit-diagram-element-focusarea');
 
-		/*
-		this._mouseHitArea.tabIndex = 0;
+		this._isTabable = null;
+		this._isFocused = false;
+		this._showFocusRing = null;
 
-		this._mouseHitArea.addEventListener('focus', (e) => {
-			this._focus.setAttribute('visibility', 'visible');
-		});
-		this._mouseHitArea.addEventListener('blur', (e) => {
-			this._focus.setAttribute('visibility', 'hidden');
-		});
-		*/
+		this._onFocus = this._onFocus.bind(this);
+		this._onBlur = this._onBlur.bind(this);
+		this._onKeyDown = this._onKeyDown.bind(this);
 
-		this._focus.setAttribute('visibility', 'hidden');
+		this._outerGroup.addEventListener('focusin', this._onFocus);
+		this._outerGroup.addEventListener('focusout', this._onBlur);
 
+		this.updateAppearance();
 
+	}
+
+	_onKeyDown(e) {
+
+		if (!this._isFocused) {
+			console.error('Key down detected for an orbit diagram element that is not focused.');
+			return;
+		}
+
+		if (!this._coordinator.getIsDraggingAllowed()) {
+			console.error('Key down detected for an orbit diagram element when interactivity is not allowed.');
+			return;
+		}
+
+		if (this._coordinator.getIsDraggingInProgress()) {
+			console.warn('Key down detected during dragging. Will ignore.');
+			return;
+		}
+
+		let deltaObj = this._getDeltaObjForKey(e.key);
+		if (deltaObj !== null) {
+			e.preventDefault();
+			deltaObj.doAnimation = false;
+			this._orbitDiagram._timekeeper.setTimeByDelta(deltaObj);
+		}
+	}
+
+	_onFocus(e) {
+		console.log(this._identity + ' focus');
+		this._isFocused = true;
+		this._outerGroup.addEventListener('keydown', this._onKeyDown);
+		this.updateAppearance();
+	}
+
+	_onBlur(e) {
+		console.log(this._identity + ' blur');
+		this._isFocused = false;
+		this._outerGroup.removeEventListener('keydown', this._onKeyDown);
+		this.updateAppearance();
+	}
+
+	makeFocused() {
+		if (!this._isFocused) {
+			this._outerGroup.focus();
+		}
+	}
+
+	removeFocus() {
+		if (this._isFocused) {
+			this._outerGroup.blur();
+		}
 	}
 
 
@@ -316,10 +365,14 @@ export default class InteractiveElement {
 		this._calcDragAngleOffset(clientPt);	
 		
 		this._coordinator._onDragBegin(this);
-		this.updateCursor();
-		this.updateHighlight();
-		this._otherElement.updateCursor();
-		this._otherElement.updateHighlight();
+
+		this.updateAppearance();
+		this._otherElement.updateAppearance();
+
+//		this.updateCursor();
+//		this.updateHighlight();
+//		this._otherElement.updateCursor();
+//		this._otherElement.updateHighlight();
 	}
 
 	_calcDragAngleOffset(clientPt) {
@@ -416,6 +469,7 @@ export default class InteractiveElement {
 		let bestScore = this._getDragInitScore(clientPt, this.TYPE_MOUSE);
 		if (Number.isFinite(bestScore)) {
 			e.preventDefault();
+			this.makeFocused();
 			this._startDragging(clientPt, this.TYPE_MOUSE);
 		}
 	}
@@ -435,11 +489,6 @@ export default class InteractiveElement {
 	*/
 
 	_onTouchStart(e) {
-
-		console.group('_onTouchStart');
-		console.log(e);
-		console.groupEnd();
-
 		// Multiple touches may start at the same time, and they may start
 		//	during an ongoing dragging session.
 
@@ -624,6 +673,13 @@ export default class InteractiveElement {
 //		return this._isRollOverHighlightVisible;
 //	}
 
+
+	updateAppearance() {
+		this.updateFocus();
+		this.updateHighlight();
+		this.updateCursor();
+	}
+
 	updateCursor() {
 		let cursor = null; // null means no cursor request for this element
 		if (this._dragType === this.TYPE_MOUSE) {
@@ -642,12 +698,16 @@ export default class InteractiveElement {
 		// Rules for the highlight:
 		//	- appears for mouse roll-over when dragging is allowed,
 		//	- appears when dragging is ongoing,
-		//	- stays on for the duration of dragging, even if the pointer moves off the element.
+		//	- stays on for the duration of dragging, even if the pointer moves off the element,
+		//	- but is not shown simultaneously with focus ring.
 		let showHighlight = false;
 		if (this.getIsBeingDragged()) {
 			showHighlight = true;
 		} else if (this._isMouseOver && this._coordinator.getCanDragStartOnElement(this)) {
 			showHighlight = true;
+		}
+		if (this._showFocusRing) {
+			showHighlight = false;
 		}
 		if (showHighlight === this._showHighlight) {
 			return;
@@ -657,6 +717,27 @@ export default class InteractiveElement {
 			this._highlight.setAttribute('visibility', 'visible');
 		} else {
 			this._highlight.setAttribute('visibility', 'hidden');
+		}
+	}
+
+	updateFocus() {
+		let isTabable = this._coordinator.getIsDraggingAllowed();
+		let showFocusRing = this._isFocused;
+		if (isTabable !== this._isTabable) {
+			this._isTabable = isTabable;
+			if (this._isTabable) {
+				this._outerGroup.tabIndex = 0;
+			} else {
+				this._outerGroup.tabIndex = -1;
+			}
+		}
+		if (showFocusRing !== this._showFocusRing) {
+			this._showFocusRing = showFocusRing;
+			if (this._showFocusRing) {
+				this._focus.setAttribute('visibility', 'visible');
+			} else {
+				this._focus.setAttribute('visibility', 'hidden');
+			}
 		}
 	}
 

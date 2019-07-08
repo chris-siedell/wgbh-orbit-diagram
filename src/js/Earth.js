@@ -2,7 +2,7 @@
 src/js/Earth.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-07-01
+2019-07-08
 */
 
 
@@ -289,6 +289,21 @@ export default class Earth extends InteractiveElement {
 		return {
 			fractionalDays: rotations,
 		};
+	}
+
+	_getDeltaObjForKey(key) {
+		let delta = 0.003;
+		if (key === 'ArrowDown' || key === 'ArrowLeft') {
+			return {
+				fractionalDays: -delta,
+			};
+		} else if (key === 'ArrowUp' || key === 'ArrowRight') {
+			return {
+				fractionalDays: delta,
+			};
+		} else {
+			return null;
+		}
 	}
 
 }

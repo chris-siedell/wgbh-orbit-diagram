@@ -2,7 +2,7 @@
 OrbitDiagram.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-07-03
+2019-07-06
 */
 
 
@@ -41,13 +41,19 @@ export default class OrbitDiagram {
 		this._root.classList.add('wgbh-orbit-diagram-root');
 		
 		this._hints = new HintsOverlay();
-		this._root.appendChild(this._hints.getImg());
+//		this._root.appendChild(this._hints.getImg());
 
 		this._svg = document.createElementNS(svgNS, 'svg');
 		this._svg.classList.add('wgbh-orbit-diagram-svg');
 		this._root.appendChild(this._svg);
 
-		this._root.appendChild(this._hints.getText());
+//		this._root.appendChild(this._hints.getText());
+
+
+		this._note = document.createElement('div');
+		this._note.classList.add('wgbh-orbit-diagram-note');
+		this._note.textContent = 'not to scale';
+		this._root.appendChild(this._note);
 
 		this._sunGroup = document.createElementNS(svgNS, 'g');
 		this._svg.appendChild(this._sunGroup);
@@ -87,10 +93,10 @@ export default class OrbitDiagram {
 
 
 
-		this._dismissHints = this._dismissHints.bind(this);
-
-		document.addEventListener('mousedown', this._dismissHints);
-		document.addEventListener('touchstart', this._dismissHints);
+//		this._dismissHints = this._dismissHints.bind(this);
+//
+//		document.addEventListener('mousedown', this._dismissHints);
+//		document.addEventListener('touchstart', this._dismissHints);
 
 		this._needs_redoLayout = true;
 	}
@@ -199,6 +205,7 @@ export default class OrbitDiagram {
 		//	layout parameters have changed.
 
 		this._needs_redrawOrbit = true;
+		this._needs_updateEarthAndMoon = true;
 
 		// These constants are baked into the external graphics.
 		const MOON_EARTH_RATIO = 0.27;
@@ -208,6 +215,24 @@ export default class OrbitDiagram {
 		let bb = this._root.getBoundingClientRect();
 		this._width = Math.floor(bb.width);
 		this._height = Math.floor(bb.height);
+
+		const minWidth = 300;
+		const minHeight = 150;
+
+		if (this._width < minWidth) {
+			console.warn('Orbit diagram is set below its minimum width.');
+			this._width = minWidth;
+		}
+
+		if (this._height < minHeight) {
+			console.warn('Orbit diagram is set below its minimum height.');
+			this._height = minHeight;
+		}
+
+//		console.group('orbit diagram redo layout');
+//		console.log('width: '+this._width);
+//		console.log('height: '+this._height);
+//		console.groupEnd();
 
 		this._svg.setAttribute('viewBox', '0 0 ' + this._width + ' ' + this._height);
 

@@ -134,6 +134,20 @@ export default class Moon extends InteractiveElement {
 		};
 	}
 
+	_getDeltaObjForKey(key) {
+		let delta = 0.08;
+		if (key === 'ArrowDown' || key === 'ArrowLeft') {
+			return {
+				fractionalDays: -delta,
+			};
+		} else if (key === 'ArrowUp' || key === 'ArrowRight') {
+			return {
+				fractionalDays: delta,
+			};
+		} else {
+			return null;
+		}
+	}
 }
 
 

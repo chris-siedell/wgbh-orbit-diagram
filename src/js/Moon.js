@@ -2,7 +2,7 @@
 src/js/Moon.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-07-10
+2019-07-11
 */
 
 
@@ -51,12 +51,16 @@ export default class Moon extends InteractiveElement {
 		this._hintCWPath.setAttribute('fill', this._hintArcFill);
 		this._hintCWPath.setAttribute('stroke', this._hintArcStroke);
 		this._hintCWPath.setAttribute('stroke-width', this._hintArcStrokeWidth);
+		this._hintCWPath.setAttribute('stroke-linejoin', 'round');
+		this._hintCWPath.setAttribute('stroke-linecap', 'round');
 		this._hint.appendChild(this._hintCWPath);
 		
 		this._hintCCWPath = document.createElementNS(svgNS, 'path');
 		this._hintCCWPath.setAttribute('fill', this._hintArcFill);
 		this._hintCCWPath.setAttribute('stroke', this._hintArcStroke);
 		this._hintCCWPath.setAttribute('stroke-width', this._hintArcStrokeWidth);
+		this._hintCCWPath.setAttribute('stroke-linejoin', 'round');
+		this._hintCCWPath.setAttribute('stroke-linecap', 'round');
 		this._hint.appendChild(this._hintCCWPath);
 
 		this._hintCWArrow = new CircularArcArrow();
@@ -125,6 +129,8 @@ export default class Moon extends InteractiveElement {
 	}
 
 	_redrawHint() {
+
+		console.log('redraw hint moon');
 		
 		let r = this._orbitDiagram._orbitRadiusPx;
 		let delta = (1.5*this._radius + this._hintArcWidth) / r;

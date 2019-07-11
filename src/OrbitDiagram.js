@@ -2,13 +2,13 @@
 OrbitDiagram.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-07-06
+2019-07-11
 */
 
 
 import './css/OrbitDiagram.css';
 
-import SunURL from './graphics/Boston2_v1_sun.svg';
+import SunURL from './graphics/Boston2_v2-modified_sun-with-arrows.svg';
 
 import Moon from './js/Moon.js';
 import Earth from './js/Earth.js';
@@ -47,7 +47,7 @@ export default class OrbitDiagram {
 		this._svg.classList.add('wgbh-orbit-diagram-svg');
 		this._root.appendChild(this._svg);
 
-//		this._root.appendChild(this._hints.getText());
+		this._root.appendChild(this._hints.getText());
 
 
 		this._note = document.createElement('div');
@@ -59,7 +59,7 @@ export default class OrbitDiagram {
 		this._svg.appendChild(this._sunGroup);
 
 		this._sun = document.createElementNS(svgNS, 'image');
-		this._sun.setAttribute('width', 100);
+		this._sun.setAttribute('width', 200);
 		this._sun.setAttribute('height', 400);
 		this._sun.setAttribute('x', 0);
 		this._sun.setAttribute('y', -200);
@@ -92,19 +92,19 @@ export default class OrbitDiagram {
 		this._coordinator.checkRegistrations();
 
 
+		this._areHintsShown = true;
 
-//		this._dismissHints = this._dismissHints.bind(this);
-//
-//		document.addEventListener('mousedown', this._dismissHints);
-//		document.addEventListener('touchstart', this._dismissHints);
 
 		this._needs_redoLayout = true;
 	}
 
-	_dismissHints() {
-		this._hints.dismiss();
-		document.removeEventListener('mousedown', this._dismissHints);
-		document.removeEventListener('touchstart', this._dismissHints);
+	dismissHints() {
+		if (this._areHintsShown) {
+			this._hints.dismiss();
+			this._moon.dismissHint();
+			this._earth.dismissHint();
+			this._areHintsShown = false;
+		}
 	}
 
 	getElement() {
@@ -271,7 +271,7 @@ export default class OrbitDiagram {
 			console.warn('The earth\'s and moon\'s touch hit areas will overlap.');
 		}
 
-		this._hints.setPosition(0.45*this._width, 0.28*this._height);
+		this._hints.setPosition(this._orbitCenterX, this._orbitCenterY - this._orbitRadiusPx + 10);
 
 		this._needs_redoLayout = false;
 

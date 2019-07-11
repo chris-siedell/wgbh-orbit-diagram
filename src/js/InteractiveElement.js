@@ -33,11 +33,11 @@ export default class InteractiveElement {
 		this.TYPE_TOUCH = 'touch';
 		this.TYPE_NONE = 'none';
 
-		this._hintArcLength = 100;
-		this._hintArcWidth = 18;
+		this._hintArcLength = 80;
+		this._hintArcWidth = 14;
 		this._hintArcFill = 'white';
 		this._hintArcStroke = 'rgba(190, 190, 190, 1)';
-		this._hintArcStrokeWidth = 4;
+		this._hintArcStrokeWidth = 3;
 
 
 		this._focusStroke = 'white';
@@ -225,6 +225,12 @@ export default class InteractiveElement {
 
 	}
 
+
+	dismissHint() {
+		this._hint.classList.add('wgbh-orbit-diagram-hints-dismissed');
+	}
+
+
 	_onKeyDown(e) {
 
 		if (!this._isFocused) {
@@ -251,14 +257,14 @@ export default class InteractiveElement {
 	}
 
 	_onFocus(e) {
-		console.log(this._identity + ' focus');
+	//	console.log(this._identity + ' focus');
 		this._isFocused = true;
 		this._outerGroup.addEventListener('keydown', this._onKeyDown);
 		this.updateAppearance();
 	}
 
 	_onBlur(e) {
-		console.log(this._identity + ' blur');
+	//	console.log(this._identity + ' blur');
 		this._isFocused = false;
 		this._outerGroup.removeEventListener('keydown', this._onKeyDown);
 		this.updateAppearance();

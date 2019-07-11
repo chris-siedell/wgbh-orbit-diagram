@@ -2,11 +2,13 @@
 src/js/Moon.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-07-01
+2019-07-10
 */
 
 
 import MoonURL from '../graphics/Boston2_v1_moon.svg';
+
+import CircularArcArrow from 'CircularArcArrow.js';
 
 import InteractiveElement from './InteractiveElement.js';
 
@@ -20,13 +22,12 @@ export default class Moon extends InteractiveElement {
 	constructor(coordinator, orbitDiagram) {
 		super(coordinator, orbitDiagram);
 
-		this._DEFAULT_IMAGE_RADIUS = 13.5;
+		this._DEFAULT_IMAGE_RADIUS = 14;//13.5;
 
 		this._touchHitArea = document.createElementNS(svgNS, 'circle');
 		this._mouseHitArea = document.createElementNS(svgNS, 'circle');
 
 		this._imageURL = MoonURL;
-
 
 
 		this._focus = document.createElementNS(svgNS, 'g');
@@ -44,7 +45,28 @@ export default class Moon extends InteractiveElement {
 		this._highlightDisc.setAttribute('fill', this._highlightFill);
 		this._highlight.appendChild(this._highlightDisc);
 
+		this._hint = document.createElementNS(svgNS, 'g');
+
+		this._hintCWPath = document.createElementNS(svgNS, 'path');
+		this._hintCWPath.setAttribute('fill', this._hintArcFill);
+		this._hintCWPath.setAttribute('stroke', this._hintArcStroke);
+		this._hintCWPath.setAttribute('stroke-width', this._hintArcStrokeWidth);
+		this._hint.appendChild(this._hintCWPath);
+		
+		this._hintCCWPath = document.createElementNS(svgNS, 'path');
+		this._hintCCWPath.setAttribute('fill', this._hintArcFill);
+		this._hintCCWPath.setAttribute('stroke', this._hintArcStroke);
+		this._hintCCWPath.setAttribute('stroke-width', this._hintArcStrokeWidth);
+		this._hint.appendChild(this._hintCCWPath);
+
+		this._hintCWArrow = new CircularArcArrow();
+		this._hintCCWArrow = new CircularArcArrow();
+
+		this._unshadowedAndUnscaled.appendChild(this._hint);
+
+
 		super._initAs('moon');
+
 
 //		this._outerGroup = document.createElementNS(svgNS, 'g');
 //
@@ -98,6 +120,40 @@ export default class Moon extends InteractiveElement {
 
 		this._focusRing.setAttribute('r', R);
 		this._highlightDisc.setAttribute('r', R);
+
+		this._redrawHint();
+	}
+
+	_redrawHint() {
+		
+		let r = this._orbitDiagram._orbitRadiusPx;
+		let delta = (1.5*this._radius + this._hintArcWidth) / r;
+		let theta = this._hintArcLength / r;
+		let startAngle = Math.PI + delta;
+
+		this._hintCWArrow.setParams({
+			r: r,	
+			cx: r,
+			bodyWidth: this._hintArcWidth,
+			startAngle: startAngle,
+			endAngle: startAngle + theta,
+		});	
+
+		this._hintCWPath.setAttribute('d', this._hintCWArrow.getPathData());
+	
+		let ccwStartAngle = Math.PI - delta;
+		
+		this._hintCCWArrow.setParams({
+			isClockwise: false,
+			r: r,	
+			cx: r,
+			bodyWidth: this._hintArcWidth,
+			startAngle: ccwStartAngle,
+			endAngle: ccwStartAngle - theta,
+		});	
+
+		this._hintCCWPath.setAttribute('d', this._hintCCWArrow.getPathData());
+
 	}
 
 	getHotspotPosition() {

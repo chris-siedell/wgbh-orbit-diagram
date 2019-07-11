@@ -2,12 +2,15 @@
 src/js/Earth.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-07-08
+2019-07-10
 */
 
 
 import EarthURL from '../graphics/Boston2_v1_earth.svg';
 import StickfigureURL from '../graphics/Boston2_v1_stickfigure.svg';
+
+import CircularArcArrow from 'CircularArcArrow.js';
+
 
 import InteractiveElement from './InteractiveElement.js';
 
@@ -64,6 +67,25 @@ export default class Earth extends InteractiveElement {
 		this._stickfigure.setAttribute('filter', 'url(#stickfigure-filter)');
 		this._unshadowed.appendChild(this._stickfigure);
 
+		this._hint = document.createElementNS(svgNS, 'g');
+
+		this._hintCWPath = document.createElementNS(svgNS, 'path');
+		this._hintCWPath.setAttribute('fill', this._hintArcFill);
+		this._hintCWPath.setAttribute('stroke', this._hintArcStroke);
+		this._hintCWPath.setAttribute('stroke-width', this._hintArcStrokeWidth);
+		this._hint.appendChild(this._hintCWPath);
+		
+		this._hintCCWPath = document.createElementNS(svgNS, 'path');
+		this._hintCCWPath.setAttribute('fill', this._hintArcFill);
+		this._hintCCWPath.setAttribute('stroke', this._hintArcStroke);
+		this._hintCCWPath.setAttribute('stroke-width', this._hintArcStrokeWidth);
+		this._hint.appendChild(this._hintCCWPath);
+
+		this._hintCWArrow = new CircularArcArrow();
+		this._hintCCWArrow = new CircularArcArrow();
+
+		this._unshadowedAndUnscaled.appendChild(this._hint);
+
 		this._touchHitArea = document.createElementNS(svgNS, 'path');
 //		this._innerGroup.appendChild(this._touchHitArea);
 
@@ -87,6 +109,37 @@ export default class Earth extends InteractiveElement {
 		this._highlight.appendChild(this._highlightArea);
 
 		super._initAs('earth');
+	}
+
+
+	_redrawHint() {
+		
+		let r = this._radius + this._hintArcWidth;
+		let delta = this._hintArcWidth / r;
+		let theta = this._hintArcLength / r;
+		let startAngle = 1.5*Math.PI + delta;
+
+		this._hintCWArrow.setParams({
+			r: r,	
+			bodyWidth: this._hintArcWidth,
+			startAngle: startAngle,
+			endAngle: startAngle + theta,
+		});	
+
+		this._hintCWPath.setAttribute('d', this._hintCWArrow.getPathData());
+	
+		let ccwStartAngle = 1.5*Math.PI - delta;
+		
+		this._hintCCWArrow.setParams({
+			isClockwise: false,
+			r: r,	
+			bodyWidth: this._hintArcWidth,
+			startAngle: ccwStartAngle,
+			endAngle: ccwStartAngle - theta,
+		});	
+
+		this._hintCCWPath.setAttribute('d', this._hintCCWArrow.getPathData());
+
 	}
 
 
@@ -252,6 +305,8 @@ export default class Earth extends InteractiveElement {
 		this._focusRing.setAttribute('d' , d);
 
 		this._highlightArea.setAttribute('d', d);
+
+		this._redrawHint();
 	}
 
 

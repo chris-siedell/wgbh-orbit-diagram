@@ -2,7 +2,7 @@
 src/js/InteractiveElement.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-07-02
+2019-07-10
 */
 
 
@@ -33,13 +33,18 @@ export default class InteractiveElement {
 		this.TYPE_TOUCH = 'touch';
 		this.TYPE_NONE = 'none';
 
-
+		this._hintArcLength = 100;
+		this._hintArcWidth = 18;
+		this._hintArcFill = 'white';
+		this._hintArcStroke = 'rgba(190, 190, 190, 1)';
+		this._hintArcStrokeWidth = 4;
 
 
 		this._focusStroke = 'white';
 		this._focusStrokeWidth = 6;
-		this._highlightFill = 'rgba(255, 255, 255, 0.5)';
 		this._focusStrokeOffset = 6;
+
+		this._highlightFill = 'rgba(255, 255, 255, 0.5)';
 
 
 
@@ -103,6 +108,7 @@ export default class InteractiveElement {
 		this._y = 0;
 
 		this._unshadowed = document.createElementNS(svgNS, 'g');
+		this._unshadowedAndUnscaled = document.createElementNS(svgNS, 'g');
 
 
 	}
@@ -150,6 +156,9 @@ export default class InteractiveElement {
 		this._outerGroup.appendChild(this._highlight);
 		this._highlight.setAttribute('filter', 'url(#'+identity+'-highlight-filter)');
 
+
+//		this._hint.setAttribute('filter', 'url(#'+identity+'-highlight-filter)');
+
 		this._shadowed = document.createElementNS(svgNS, 'g');
 
 		this._shadowedMask = document.createElementNS(svgNS, 'mask');
@@ -172,6 +181,7 @@ export default class InteractiveElement {
 		this._innerGroup.appendChild(this._interactive);
 
 		this._outerGroup.appendChild(this._innerGroup);
+		this._outerGroup.appendChild(this._unshadowedAndUnscaled);
 		this._outerGroup.appendChild(this._focus);
 
 		this._interactive.appendChild(this._touchHitArea);
@@ -316,6 +326,7 @@ export default class InteractiveElement {
 		this._image.setAttribute('transform', rotate);
 		this._interactive.setAttribute('transform', rotate);
 		this._unshadowed.setAttribute('transform', rotate);
+		this._unshadowedAndUnscaled.setAttribute('transform', rotate);
 		this._focus.setAttribute('transform', rotate);
 		this._highlight.setAttribute('transform', rotate);
 		this._innerGroup.setAttribute('transform', scale);

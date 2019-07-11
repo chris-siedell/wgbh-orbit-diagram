@@ -208,8 +208,8 @@ export default class OrbitDiagram {
 		this._needs_updateEarthAndMoon = true;
 
 		// These constants are baked into the external graphics.
-		const MOON_EARTH_RATIO = 0.27;
-		const MOON_IMAGE_DEFAULT_RADIUS = 13.5;
+		const MOON_EARTH_RATIO = 0.28;//0.27;
+		const MOON_IMAGE_DEFAULT_RADIUS = 14;//13.5;
 		const EARTH_IMAGE_DEFAULT_RADIUS = 50;
 
 		let bb = this._root.getBoundingClientRect();
@@ -255,7 +255,11 @@ export default class OrbitDiagram {
 		let sunScale = this._height/400;
 		this._sunGroup.setAttribute('transform', 'translate(0, ' + (this._height/2) + ') scale('+sunScale+')');
 
-		//console.log(this._orbitRadiusPx);
+		console.group('redo layout');
+		console.log('orbit radius: '+this._orbitRadiusPx);
+		console.log('moon radius: '+this._moonRadiusPx);
+		console.log('earth radius: '+this._earthRadiusPx);
+		console.groupEnd();
 
 		// For development: check for hit area overlap.
 		let minSafeOrbitRadiusForMouse = this._earth._maxMouseHitAreaDistance + this._moon._maxMouseHitAreaDistance;

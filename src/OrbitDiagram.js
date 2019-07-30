@@ -84,7 +84,8 @@ export default class OrbitDiagram {
 		this._earthSize = 0.2;
 
 		this._orbitWidth = 2;
-		this._orbitColor = 'white';
+		this._orbitColor = 'rgb(180, 180, 180)';
+		this._orbitStyle = 'dotted';
 
 		this._orbit = document.createElementNS(svgNS, 'circle');
 		this._orbit.setAttribute('fill', 'none');
@@ -324,6 +325,18 @@ export default class OrbitDiagram {
 		this._orbit.setAttribute('r', this._orbitRadiusPx);
 		this._orbit.setAttribute('stroke-width', this._orbitWidth);
 		this._orbit.setAttribute('stroke', this._orbitColor);
+		if (this._orbitStyle === 'dotted') {
+			// spacingTarget is used to calculate the actual spacing, which is
+			//	chosen so that there are an integer number of identical gaps.
+			const spacingTarget = 4 * this._orbitWidth;
+			const circ = 2*Math.PI*this._orbitRadiusPx;
+			const n = Math.ceil(circ / spacingTarget);
+			const spacing = circ / n;
+			this._orbit.setAttribute('stroke-linecap', 'round');
+			this._orbit.setAttribute('stroke-dasharray', '0 ' + spacing);
+		} else {
+			this._orbit.setAttribute('stroke-dasharray', 'none');
+		}
 		this._needs_redrawOrbit = false;
 	}
 

@@ -2,13 +2,14 @@
 OrbitDiagram.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-07-11
+2019-07-19
 */
 
 
 import './css/OrbitDiagram.css';
 
 import SunURL from './graphics/Boston2_v2-modified_sun-with-arrows.svg';
+import TimeTickmarksURL from './graphics/time-tickmarks.svg';
 
 import Moon from './js/Moon.js';
 import Earth from './js/Earth.js';
@@ -54,6 +55,18 @@ export default class OrbitDiagram {
 		this._note.classList.add('wgbh-orbit-diagram-note');
 		this._note.textContent = 'not to scale';
 		this._root.appendChild(this._note);
+
+		this._timeTickmarksGroup = document.createElementNS(svgNS, 'g');
+		this._timeTickmarksGroup.setAttribute('visibility', 'hidden');
+		this._svg.appendChild(this._timeTickmarksGroup);
+
+		this._timeTickmarks = document.createElementNS(svgNS, 'image');
+		this._timeTickmarks.setAttribute('width', 300);
+		this._timeTickmarks.setAttribute('height', 300);
+		this._timeTickmarks.setAttribute('x', -150);
+		this._timeTickmarks.setAttribute('y', -150);
+		this._timeTickmarks.setAttributeNS(xlinkNS, 'href', TimeTickmarksURL);
+		this._timeTickmarksGroup.appendChild(this._timeTickmarks);
 
 		this._sunGroup = document.createElementNS(svgNS, 'g');
 		this._svg.appendChild(this._sunGroup);
@@ -128,6 +141,17 @@ export default class OrbitDiagram {
 			this._needs_redoLayout = true;
 		}
 
+		if (params.hasOwnProperty('showLunarLandmark')) {
+			this._moon.setShowLandmark(params.showLunarLandmark);
+		}
+
+		if (params.hasOwnProperty('showTimeTickmarks')) {
+			if (params.showTimeTickmarks) {
+				this._timeTickmarksGroup.setAttribute('visibility', 'visible');
+			} else {
+				this._timeTickmarksGroup.setAttribute('visibility', 'hidden');
+			}
+		}
 	}
 
 
@@ -243,6 +267,11 @@ export default class OrbitDiagram {
 
 		this._orbitCenterY = 0.5*this._height;
 		this._orbitCenterX = this._width - this._orbitCenterY;
+
+		let timeTickmarksTransform = 'translate(' + this._orbitCenterX + ', ' + this._orbitCenterY + ')';
+		timeTickmarksTransform += ' scale(' + (this._earthRadiusPx/50) + ')';
+
+		this._timeTickmarksGroup.setAttribute('transform', timeTickmarksTransform);
 
 		this._moonScale = this._moonRadiusPx/MOON_IMAGE_DEFAULT_RADIUS;
 		this._earthScale = this._earthRadiusPx/EARTH_IMAGE_DEFAULT_RADIUS;

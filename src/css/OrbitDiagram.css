@@ -21,6 +21,8 @@ astro.unl.edu
 	position: relative;
 
 	overflow: hidden;
+
+	text-align: center;
 }
 
 .wgbh-orbit-diagram-svg {
@@ -43,6 +45,7 @@ astro.unl.edu
 	font-style: italic;
 	right: 0;
 	bottom: 0;
+	text-align: center;
 }
 
 .wgbh-orbit-diagram-element-focusarea:focus {

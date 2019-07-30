@@ -2,7 +2,7 @@
 src/js/Moon.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-07-11
+2019-07-19
 */
 
 
@@ -68,6 +68,18 @@ export default class Moon extends InteractiveElement {
 
 		this._unshadowedAndUnscaled.appendChild(this._hint);
 
+		const landmarkRadius = 0.2 * this._DEFAULT_IMAGE_RADIUS;
+		const landmarkHeight = 3.5 * landmarkRadius;
+
+		this._landmark = document.createElementNS(svgNS, 'rect');
+		this._landmark.setAttribute('x', 0);
+		this._landmark.setAttribute('y', -landmarkRadius);
+		this._landmark.setAttribute('width', this._DEFAULT_IMAGE_RADIUS + landmarkHeight);
+		this._landmark.setAttribute('height', 2*landmarkRadius);
+		this._landmark.setAttribute('stroke', 'none');
+		this._landmark.setAttribute('fill', 'rgb(255, 100, 255)');
+		this._landmark.setAttribute('visibility', 'hidden');
+		this._unshadowedBehind.appendChild(this._landmark);
 
 		super._initAs('moon');
 
@@ -92,6 +104,13 @@ export default class Moon extends InteractiveElement {
 //		this._innerGroup.appendChild(this._mouseHitArea);
 	}
 
+	setShowLandmark(bool) {
+		if (bool) {
+			this._landmark.setAttribute('visibility', 'visible');
+		} else {
+			this._landmark.setAttribute('visibility', 'hidden');
+		}
+	}
 
 	_redrawHitAreas() {
 

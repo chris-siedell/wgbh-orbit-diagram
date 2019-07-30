@@ -107,6 +107,7 @@ export default class InteractiveElement {
 		this._x = 0;
 		this._y = 0;
 
+		this._unshadowedBehind = document.createElementNS(svgNS, 'g');
 		this._unshadowed = document.createElementNS(svgNS, 'g');
 		this._unshadowedAndUnscaled = document.createElementNS(svgNS, 'g');
 
@@ -173,6 +174,8 @@ export default class InteractiveElement {
 		this._shadowedMask.appendChild(this._shadowedMaskCircle);
 
 		this._shadowed.setAttribute('mask', 'url(#'+identity+'-shadowed-mask)');
+
+		this._innerGroup.appendChild(this._unshadowedBehind);
 		this._innerGroup.appendChild(this._shadowed);
 
 		this._innerGroup.appendChild(this._unshadowed);
@@ -331,6 +334,7 @@ export default class InteractiveElement {
 		let scale = 'scale(' + this._scale + ')';
 		this._image.setAttribute('transform', rotate);
 		this._interactive.setAttribute('transform', rotate);
+		this._unshadowedBehind.setAttribute('transform', rotate);
 		this._unshadowed.setAttribute('transform', rotate);
 		this._unshadowedAndUnscaled.setAttribute('transform', rotate);
 		this._focus.setAttribute('transform', rotate);

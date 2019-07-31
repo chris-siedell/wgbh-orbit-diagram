@@ -2,13 +2,13 @@
 OrbitDiagram.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-07-19
+2019-07-30
 */
 
 
 import './css/OrbitDiagram.css';
 
-import SunURL from './graphics/Boston2_v2-modified_sun-with-arrows.svg';
+import SunURL from './graphics/Boston2_v2-modified-v2_sun-with-gradient.svg';
 import TimeTickmarksURL from './graphics/time-tickmarks.svg';
 
 import Moon from './js/Moon.js';

@@ -2,7 +2,7 @@
 src/js/InteractiveElement.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-07-10
+2019-08-02
 */
 
 
@@ -33,11 +33,11 @@ export default class InteractiveElement {
 		this.TYPE_TOUCH = 'touch';
 		this.TYPE_NONE = 'none';
 
-		this._hintArcLength = 80;
-		this._hintArcWidth = 14;
+		this._hintArcLength = 40;
+		this._hintArcWidth = 8;
 		this._hintArcFill = 'white';
 		this._hintArcStroke = 'rgba(190, 190, 190, 1)';
-		this._hintArcStrokeWidth = 3;
+		this._hintArcStrokeWidth = 0;
 
 
 		this._focusStroke = 'white';
@@ -47,7 +47,11 @@ export default class InteractiveElement {
 		this._highlightFill = 'rgba(255, 255, 255, 0.5)';
 
 
-
+		// _alwaysShowArrows is used as part of the initial hint message (will be set to false
+		//	on first interaction).
+		// _showArrows tracks the current state of the arrows.
+		this._alwaysShowArrows = true;
+		this._showArrows = true;
 
 
 		// Subclasses must do the following:
@@ -203,11 +207,11 @@ export default class InteractiveElement {
 		this._shadowed.appendChild(this._shadow);
 
 		// Always-on Event Listeners
-		this._mouseHitArea.addEventListener('mouseenter', this._onMouseEnter);
-		this._mouseHitArea.addEventListener('mouseleave', this._onMouseLeaveLocal);
+		this._mouseHitArea.addEventListener('mouseenter', this._onMouseEnter, {passive: false});
+		this._mouseHitArea.addEventListener('mouseleave', this._onMouseLeaveLocal, {passive: false});
 
-		this._mouseHitArea.addEventListener('mousedown', this._onMouseDown);
-		this._interactive.addEventListener('touchstart', this._onTouchStart);
+		this._mouseHitArea.addEventListener('mousedown', this._onMouseDown, {passive: false});
+		this._interactive.addEventListener('touchstart', this._onTouchStart, {passive: false});
 
 
 		// Tab
@@ -221,18 +225,12 @@ export default class InteractiveElement {
 		this._onBlur = this._onBlur.bind(this);
 		this._onKeyDown = this._onKeyDown.bind(this);
 
-		this._outerGroup.addEventListener('focusin', this._onFocus);
-		this._outerGroup.addEventListener('focusout', this._onBlur);
+		this._outerGroup.addEventListener('focusin', this._onFocus, {passive: false});
+		this._outerGroup.addEventListener('focusout', this._onBlur, {passive: false});
 
 		this.updateAppearance();
 
 	}
-
-
-	dismissHint() {
-		this._hint.classList.add('wgbh-orbit-diagram-hints-dismissed');
-	}
-
 
 	_onKeyDown(e) {
 
@@ -260,14 +258,22 @@ export default class InteractiveElement {
 	}
 
 	_onFocus(e) {
-	//	console.log(this._identity + ' focus');
-		this._isFocused = true;
-		this._outerGroup.addEventListener('keydown', this._onKeyDown);
-		this.updateAppearance();
+		if (this._coordinator.getIsDraggingAllowed()) {
+			this._isFocused = true;
+			this._outerGroup.addEventListener('keydown', this._onKeyDown, {passive: false});
+			this.updateAppearance();
+		} else {
+			// Reject focus if interactivity is not allowed.
+			e.preventDefault();
+			if (e.relatedTarget) {
+				e.relatedTarget.focus();
+			} else {
+				e.currentTarget.blur();
+			}
+		}
 	}
 
 	_onBlur(e) {
-	//	console.log(this._identity + ' blur');
 		this._isFocused = false;
 		this._outerGroup.removeEventListener('keydown', this._onKeyDown);
 		this.updateAppearance();
@@ -366,13 +372,13 @@ export default class InteractiveElement {
 //		console.groupEnd();
 
 		if (type === this.TYPE_MOUSE) {
-			document.addEventListener('mousemove', this._onMouseMove);
-			document.addEventListener('mouseup', this._onMouseFinished);
-			document.addEventListener('mouseleave', this._onMouseFinished);
+			document.addEventListener('mousemove', this._onMouseMove, {passive: false});
+			document.addEventListener('mouseup', this._onMouseFinished, {passive: false});
+			document.addEventListener('mouseleave', this._onMouseFinished, {passive: false});
 		} else if (type === this.TYPE_TOUCH) {
-			document.addEventListener('touchmove', this._onTouchMove);
-			document.addEventListener('touchend', this._onTouchFinished);
-			document.addEventListener('touchcancel', this._onTouchFinished);
+			document.addEventListener('touchmove', this._onTouchMove, {passive: false});
+			document.addEventListener('touchend', this._onTouchFinished, {passive: false});
+			document.addEventListener('touchcancel', this._onTouchFinished, {passive: false});
 		} else {
 			console.error('Unknown drag type.');
 			return;
@@ -699,6 +705,7 @@ export default class InteractiveElement {
 		this.updateFocus();
 		this.updateHighlight();
 		this.updateCursor();
+		this.updateArrows();
 	}
 
 	updateCursor() {
@@ -759,6 +766,42 @@ export default class InteractiveElement {
 			} else {
 				this._focus.setAttribute('visibility', 'hidden');
 			}
+		}
+	}
+
+	updateArrows() {
+		let showArrows = this._alwaysShowArrows | this._isFocused;
+		if (showArrows !== this._showArrows) {
+			this._showArrows = showArrows;
+
+			const SHOWN = 'wgbh-orbit-diagram-shown';
+			const NOT_SHOWN = 'wgbh-orbit-diagram-not-shown';
+			const DISMISSED = 'wgbh-orbit-diagram-dismissed';
+
+			// The arrows are initially always shown as part of the drag hint. When the hint
+			//	is dismissed on the initial interaction they arrows fade away. Otherwise, the
+			//	arrows are shown or hidden instantly.
+
+			if (this._showArrows) {
+				this._hint.classList.add(SHOWN);
+				this._hint.classList.remove(NOT_SHOWN, DISMISSED);
+			} else { 
+				this._hint.classList.remove(SHOWN);
+				if (this._flag_dismissInitHint) {
+					this._hint.classList.add(DISMISSED);
+				} else {
+					this._hint.classList.add(NOT_SHOWN);
+				}
+			}
+		}
+		this._flag_dismissInitHint = false;
+	}
+
+	dismissInitHint() {
+		if (this._alwaysShowArrows) {
+			this._alwaysShowArrows = false;
+			this._flag_dismissInitHint = true;
+			this.updateArrows();
 		}
 	}
 

@@ -2,7 +2,7 @@
 OrbitDiagram.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-07-30
+2019-08-02
 */
 
 
@@ -14,7 +14,7 @@ import TimeTickmarksURL from './graphics/time-tickmarks.svg';
 import Moon from './js/Moon.js';
 import Earth from './js/Earth.js';
 import InteractiveElementCoordinator from './js/InteractiveElementCoordinator.js';
-import HintsOverlay from './js/HintsOverlay.js';
+import InitMessage from './js/InitMessage.js';
 
 
 const svgNS = 'http://www.w3.org/2000/svg';
@@ -40,16 +40,13 @@ export default class OrbitDiagram {
 
 		this._root = document.createElement('div');
 		this._root.classList.add('wgbh-orbit-diagram-root');
-		
-		this._hints = new HintsOverlay();
-//		this._root.appendChild(this._hints.getImg());
 
 		this._svg = document.createElementNS(svgNS, 'svg');
 		this._svg.classList.add('wgbh-orbit-diagram-svg');
 		this._root.appendChild(this._svg);
 
-		this._root.appendChild(this._hints.getText());
-
+		this._initMessage = new InitMessage();
+		this._root.appendChild(this._initMessage.getElement());
 
 		this._note = document.createElement('div');
 		this._note.classList.add('wgbh-orbit-diagram-note');
@@ -108,15 +105,19 @@ export default class OrbitDiagram {
 
 		this._areHintsShown = true;
 
+		this._flag_useReportedWidth = true;
+		this._flag_useReportedHeight = true;
 
 		this._needs_redoLayout = true;
 	}
 
 	dismissHints() {
 		if (this._areHintsShown) {
-			this._hints.dismiss();
-			this._moon.dismissHint();
-			this._earth.dismissHint();
+			this._initMessage.dismiss();
+
+			this._moon.dismissInitHint();
+			this._earth.dismissInitHint();
+
 			this._areHintsShown = false;
 		}
 	}
@@ -135,6 +136,26 @@ export default class OrbitDiagram {
 
 		if (params.hasOwnProperty('earthSize')) {
 			this._earthSize = params.earthSize;
+			this._needs_redoLayout = true;
+		}
+
+		if (params.hasOwnProperty('width')) {
+			if (typeof params.width === 'number') {
+				this._width = params.width;
+				this._flag_useReportedWidth = false;
+			} else {
+				this._flag_useReportedWidth = true;
+			}
+			this._needs_redoLayout = true;
+		}
+
+		if (params.hasOwnProperty('height')) {
+			if (typeof params.height === 'number') {
+				this._height = params.height;
+				this._flag_useReportedHeight = false;
+			} else {
+				this._flag_useReportedHeight = true;
+			}
 			this._needs_redoLayout = true;
 		}
 
@@ -236,10 +257,16 @@ export default class OrbitDiagram {
 		const MOON_EARTH_RATIO = 0.28;//0.27;
 		const MOON_IMAGE_DEFAULT_RADIUS = 14;//13.5;
 		const EARTH_IMAGE_DEFAULT_RADIUS = 50;
-
-		let bb = this._root.getBoundingClientRect();
-		this._width = Math.floor(bb.width);
-		this._height = Math.floor(bb.height);
+	
+		if (this._flag_useReportedWidth || this._flag_useReportedHeight) {
+			let bb = this._root.getBoundingClientRect();
+			if (this._flag_useReportedWidth) {
+				this._width = Math.floor(bb.width);
+			}
+			if (this._flag_useReportedHeight) {
+				this._height = Math.floor(bb.height);
+			}
+		}
 
 		const minWidth = 300;
 		const minHeight = 150;
@@ -254,10 +281,20 @@ export default class OrbitDiagram {
 			this._height = minHeight;
 		}
 
-//		console.group('orbit diagram redo layout');
-//		console.log('width: '+this._width);
-//		console.log('height: '+this._height);
-//		console.groupEnd();
+		if (!this._flag_useReportedWidth) {
+			this._root.style.width = this._width + 'px';
+		}
+		
+		if (!this._flag_useReportedHeight) {
+			this._root.style.height = this._height + 'px';
+		}
+
+		console.group('orbit diagram redo layout');
+		console.log('width: '+this._width);
+		console.log('height: '+this._height);
+		console.log('client height: '+this._root.clientHeight);
+		console.log('offset height: '+this._root.offsetHeight);
+		console.groupEnd();
 
 		this._svg.setAttribute('viewBox', '0 0 ' + this._width + ' ' + this._height);
 
@@ -301,7 +338,8 @@ export default class OrbitDiagram {
 			console.warn('The earth\'s and moon\'s touch hit areas will overlap.');
 		}
 
-		this._hints.setPosition(this._orbitCenterX, this._orbitCenterY - this._orbitRadiusPx + 10);
+		//this._initMessage.setPosition(this._orbitCenterX, this._orbitCenterY - this._orbitRadiusPx);
+		this._initMessage.setPosition(this._width/2, this._orbitCenterY - this._orbitRadiusPx);
 
 		this._needs_redoLayout = false;
 

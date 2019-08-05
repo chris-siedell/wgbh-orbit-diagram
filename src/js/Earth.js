@@ -2,12 +2,12 @@
 src/js/Earth.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-07-11
+2019-08-03
 */
 
 
 import EarthURL from '../graphics/Boston2_v1_earth.svg';
-import StickfigureURL from '../graphics/Boston2_v1_stickfigure.svg';
+import StickfigureURL from '../graphics/Boston2_v5b_stickfigure-extraextrawide.svg';
 
 import CircularArcArrow from 'CircularArcArrow.js';
 
@@ -118,10 +118,8 @@ export default class Earth extends InteractiveElement {
 
 	_redrawHint() {
 
-		console.log('redraw hint earth');
-		
-		let r = this._radius + this._hintArcWidth;
-		let delta = this._hintArcWidth / r;
+		let r = 1.2*(this._radius + this._hintArcWidth);
+		let delta = 2.7*(this._hintArcWidth / r);
 		let theta = this._hintArcLength / r;
 		let startAngle = 1.5*Math.PI + delta;
 

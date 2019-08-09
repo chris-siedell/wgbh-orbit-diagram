@@ -2,7 +2,7 @@
 src/js/InteractiveElement.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-08-02
+2019-08-08
 */
 
 
@@ -80,6 +80,9 @@ export default class InteractiveElement {
 
 		//	_shadowed
 		//	_focus
+
+
+		this._NEVER_SHOW_FOCUS_RING = true;
 
 
 
@@ -189,7 +192,10 @@ export default class InteractiveElement {
 
 		this._outerGroup.appendChild(this._innerGroup);
 		this._outerGroup.appendChild(this._unshadowedAndUnscaled);
-		this._outerGroup.appendChild(this._focus);
+
+		if (!this._NEVER_SHOW_FOCUS_RING) {
+			this._outerGroup.appendChild(this._focus);
+		}
 
 		this._interactive.appendChild(this._touchHitArea);
 		this._interactive.appendChild(this._mouseHitArea);
@@ -751,6 +757,9 @@ export default class InteractiveElement {
 	updateFocus() {
 		let isTabable = this._coordinator.getIsDraggingAllowed();
 		let showFocusRing = this._isFocused;
+		if (this._NEVER_SHOW_FOCUS_RING) {
+			showFocusRing = false;
+		}
 		if (isTabable !== this._isTabable) {
 			this._isTabable = isTabable;
 			if (this._isTabable) {

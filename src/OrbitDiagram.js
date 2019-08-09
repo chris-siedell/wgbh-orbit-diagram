@@ -2,13 +2,17 @@
 OrbitDiagram.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-08-02
+2019-08-08
 */
 
 
 import './css/OrbitDiagram.css';
 
-import SunURL from './graphics/Boston2_v2-modified-v2_sun-with-gradient.svg';
+// The sun and sun gradient SVGs must have dimensions (width, height,
+//	and viewBox) of 400x200.
+import SunURL from './graphics/Boston2_v2-modified_sun.svg';
+import SunGradientURL from './graphics/Boston2_v2-modified_sun-gradient.svg';
+
 import TimeTickmarksURL from './graphics/time-tickmarks.svg';
 
 import Moon from './js/Moon.js';
@@ -52,6 +56,18 @@ export default class OrbitDiagram {
 		this._note.classList.add('wgbh-orbit-diagram-note');
 		this._note.textContent = 'not to scale';
 		this._root.appendChild(this._note);
+
+		this._sunGradientGroup = document.createElementNS(svgNS, 'g');
+		this._svg.appendChild(this._sunGradientGroup);
+		
+		this._sunGradient = document.createElementNS(svgNS, 'image');
+		this._sunGradient.setAttribute('preserveAspectRatio', 'none');
+		this._sunGradient.setAttribute('width', 200);
+		this._sunGradient.setAttribute('height', 400);
+		this._sunGradient.setAttribute('x', 0);
+		this._sunGradient.setAttribute('y', -200);
+		this._sunGradient.setAttributeNS(xlinkNS, 'href', SunGradientURL);
+		this._sunGradientGroup.appendChild(this._sunGradient);
 
 		this._timeTickmarksGroup = document.createElementNS(svgNS, 'g');
 		this._timeTickmarksGroup.setAttribute('visibility', 'hidden');
@@ -321,6 +337,10 @@ export default class OrbitDiagram {
 
 		let sunScale = this._height/400;
 		this._sunGroup.setAttribute('transform', 'translate(0, ' + (this._height/2) + ') scale('+sunScale+')');
+
+		let sunGradientXScale = (this._orbitCenterX - 0.5*this._orbitRadiusPx) / 200;
+		this._sunGradient.setAttribute('transform', 'translate(0, ' +
+				(this._height/2) + ') scale(' + sunGradientXScale + ', ' + sunScale + ')');
 
 		console.group('redo layout');
 		console.log('orbit radius: '+this._orbitRadiusPx);

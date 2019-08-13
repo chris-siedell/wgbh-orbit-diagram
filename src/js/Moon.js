@@ -6,7 +6,7 @@ astro.unl.edu
 */
 
 
-import MoonURL from '../graphics/Boston2_v1_moon.svg';
+import MoonURL from '../graphics/Boston2_v1_moon-fixed.svg';
 
 import CircularArcArrow from 'CircularArcArrow.js';
 

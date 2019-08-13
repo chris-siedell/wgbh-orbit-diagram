@@ -1,0 +1,1 @@
+The "-fixed" suffix means the SVG was manually edited to add width and height attributes to the top SVG element (matching the viewBox values). This seems to fix some forms of browser misbehavior that are occasionally seen. Sometimes Illustrator includes these attributes, sometimes it doesn't.

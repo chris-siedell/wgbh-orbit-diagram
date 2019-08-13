@@ -2,8 +2,12 @@
 OrbitDiagram.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-08-08
+2019-08-12
 */
+
+
+const VERSION_STR = '0.7';
+console.info('WGBH Orbit Diagram (version: ' + VERSION_STR + ')');
 
 
 import './css/OrbitDiagram.css';

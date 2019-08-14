@@ -2,7 +2,7 @@
 OrbitDiagram.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-08-12
+2019-08-14
 */
 
 
@@ -96,6 +96,9 @@ export default class OrbitDiagram {
 		this._sun.setAttributeNS(xlinkNS, 'href', SunURL);
 		this._sunGroup.appendChild(this._sun);
 
+		this._remSampler = document.createElement('div');
+		this._remSampler.classList.add('wgbh-orbit-diagram-rem-sampler');
+		this._root.appendChild(this._remSampler);
 
 		this._margin = 0.05;
 		this._earthSize = 0.2;
@@ -121,7 +124,6 @@ export default class OrbitDiagram {
 		this._earth._otherElement = this._moon;
 
 		this._coordinator.checkRegistrations();
-
 
 		this._areHintsShown = true;
 
@@ -273,6 +275,8 @@ export default class OrbitDiagram {
 		this._needs_redrawOrbit = true;
 		this._needs_updateEarthAndMoon = true;
 
+		const remPx = this._remSampler.getBoundingClientRect().width;
+
 		// These constants are baked into the external graphics.
 		const MOON_EARTH_RATIO = 0.28;//0.27;
 		const MOON_IMAGE_DEFAULT_RADIUS = 14;//13.5;
@@ -288,18 +292,24 @@ export default class OrbitDiagram {
 			}
 		}
 
-		const minWidth = 300;
-		const minHeight = 150;
+		// scaleFactor controls the sizing of the 'not to scale' note and the
+		//	initial message.
+		const xScaleFactor = ((this._width/remPx) - 20)/40;
+		const yScaleFactor = ((this._height/remPx) - 10)/20;
+		const scaleFactor = Math.min(1, Math.max(0, xScaleFactor, yScaleFactor));
 
-		if (this._width < minWidth) {
-			console.warn('Orbit diagram is set below its minimum width.');
-			this._width = minWidth;
-		}
-
-		if (this._height < minHeight) {
-			console.warn('Orbit diagram is set below its minimum height.');
-			this._height = minHeight;
-		}
+//		const minWidth = 300;
+//		const minHeight = 150;
+//
+//		if (this._width < minWidth) {
+//			console.warn('Orbit diagram is set below its minimum width.');
+//			this._width = minWidth;
+//		}
+//
+//		if (this._height < minHeight) {
+//			console.warn('Orbit diagram is set below its minimum height.');
+//			this._height = minHeight;
+//		}
 
 		if (!this._flag_useReportedWidth) {
 			this._root.style.width = this._width + 'px';
@@ -309,12 +319,12 @@ export default class OrbitDiagram {
 			this._root.style.height = this._height + 'px';
 		}
 
-		console.group('orbit diagram redo layout');
-		console.log('width: '+this._width);
-		console.log('height: '+this._height);
-		console.log('client height: '+this._root.clientHeight);
-		console.log('offset height: '+this._root.offsetHeight);
-		console.groupEnd();
+//		console.group('orbit diagram redo layout');
+//		console.log('width: '+this._width);
+//		console.log('height: '+this._height);
+//		console.log('client height: '+this._root.clientHeight);
+//		console.log('offset height: '+this._root.offsetHeight);
+//		console.groupEnd();
 
 		this._svg.setAttribute('viewBox', '0 0 ' + this._width + ' ' + this._height);
 
@@ -346,11 +356,11 @@ export default class OrbitDiagram {
 		this._sunGradient.setAttribute('transform', 'translate(0, ' +
 				(this._height/2) + ') scale(' + sunGradientXScale + ', ' + sunScale + ')');
 
-		console.group('redo layout');
-		console.log('orbit radius: '+this._orbitRadiusPx);
-		console.log('moon radius: '+this._moonRadiusPx);
-		console.log('earth radius: '+this._earthRadiusPx);
-		console.groupEnd();
+//		console.group('redo layout');
+//		console.log('orbit radius: '+this._orbitRadiusPx);
+//		console.log('moon radius: '+this._moonRadiusPx);
+//		console.log('earth radius: '+this._earthRadiusPx);
+//		console.groupEnd();
 
 		// For development: check for hit area overlap.
 		let minSafeOrbitRadiusForMouse = this._earth._maxMouseHitAreaDistance + this._moon._maxMouseHitAreaDistance;
@@ -362,8 +372,12 @@ export default class OrbitDiagram {
 			console.warn('The earth\'s and moon\'s touch hit areas will overlap.');
 		}
 
-		//this._initMessage.setPosition(this._orbitCenterX, this._orbitCenterY - this._orbitRadiusPx);
 		this._initMessage.setPosition(this._width/2, this._orbitCenterY - this._orbitRadiusPx);
+		this._initMessage.setScale(scaleFactor);
+
+		const noteMargins = 0.2 + 0.8*scaleFactor;	
+		this._note.style.margin = '0 ' + noteMargins + 'rem ' + noteMargins + 'rem 0';
+		this._note.style.fontSize = (0.6 + 0.4*scaleFactor) + 'rem';
 
 		this._needs_redoLayout = false;
 

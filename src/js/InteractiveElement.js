@@ -251,7 +251,7 @@ export default class InteractiveElement {
 		}
 
 		if (this._coordinator.getIsDraggingInProgress()) {
-			console.warn('Key down detected during dragging. Will ignore.');
+			// Ignore key input when dragging.
 			return;
 		}
 

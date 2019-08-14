@@ -149,8 +149,6 @@ export default class Moon extends InteractiveElement {
 
 	_redrawHint() {
 
-		console.log('redraw hint moon');
-		
 		let r = this._orbitDiagram._orbitRadiusPx;
 		let delta = (1.5*this._radius + this._hintArcWidth) / r;
 		let theta = this._hintArcLength / r;

@@ -2,7 +2,7 @@
 InitMessage.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-08-01
+2019-08-14
 */
 
 
@@ -31,6 +31,10 @@ export default class InitMessage {
 
 	getImg() {
 		return this._img;
+	}
+
+	setScale(arg) {
+		this._element.style.fontSize = (0.8 + 0.4*arg) + 'rem';
 	}
 
 	setPosition(x, y) {

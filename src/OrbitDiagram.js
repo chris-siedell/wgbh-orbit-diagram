@@ -2,11 +2,11 @@
 OrbitDiagram.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-08-14
+2019-08-15
 */
 
 
-const VERSION_STR = '0.7';
+const VERSION_STR = '0.8';
 console.info('WGBH Orbit Diagram (version: ' + VERSION_STR + ')');
 
 
@@ -49,17 +49,17 @@ export default class OrbitDiagram {
 		this._root = document.createElement('div');
 		this._root.classList.add('wgbh-orbit-diagram-root');
 
+		this._note = document.createElement('div');
+		this._note.classList.add('wgbh-orbit-diagram-note');
+		this._note.textContent = 'not to scale';
+		this._root.appendChild(this._note);
+
 		this._svg = document.createElementNS(svgNS, 'svg');
 		this._svg.classList.add('wgbh-orbit-diagram-svg');
 		this._root.appendChild(this._svg);
 
 		this._initMessage = new InitMessage();
 		this._root.appendChild(this._initMessage.getElement());
-
-		this._note = document.createElement('div');
-		this._note.classList.add('wgbh-orbit-diagram-note');
-		this._note.textContent = 'not to scale';
-		this._root.appendChild(this._note);
 
 		this._sunGradientGroup = document.createElementNS(svgNS, 'g');
 		this._svg.appendChild(this._sunGradientGroup);
@@ -127,9 +127,6 @@ export default class OrbitDiagram {
 
 		this._areHintsShown = true;
 
-		this._flag_useReportedWidth = true;
-		this._flag_useReportedHeight = true;
-
 		this._needs_redoLayout = true;
 	}
 
@@ -162,22 +159,12 @@ export default class OrbitDiagram {
 		}
 
 		if (params.hasOwnProperty('width')) {
-			if (typeof params.width === 'number') {
-				this._width = params.width;
-				this._flag_useReportedWidth = false;
-			} else {
-				this._flag_useReportedWidth = true;
-			}
+			this._width = params.width;
 			this._needs_redoLayout = true;
 		}
 
 		if (params.hasOwnProperty('height')) {
-			if (typeof params.height === 'number') {
-				this._height = params.height;
-				this._flag_useReportedHeight = false;
-			} else {
-				this._flag_useReportedHeight = true;
-			}
+			this._height = params.height;
 			this._needs_redoLayout = true;
 		}
 
@@ -198,7 +185,6 @@ export default class OrbitDiagram {
 		}
 	}
 
-
 	update() {
 
 		if (this._needs_redoLayout) {
@@ -208,7 +194,6 @@ export default class OrbitDiagram {
 		if (this._needs_redrawOrbit) {
 			this._redrawOrbit();
 		}
-
 
 		if (this._timekeeper.getHasAnimationStateChanged()) {
 			let animState = this._timekeeper.getAnimationState();
@@ -282,49 +267,17 @@ export default class OrbitDiagram {
 		const MOON_IMAGE_DEFAULT_RADIUS = 14;//13.5;
 		const EARTH_IMAGE_DEFAULT_RADIUS = 50;
 	
-		if (this._flag_useReportedWidth || this._flag_useReportedHeight) {
-			let bb = this._root.getBoundingClientRect();
-			if (this._flag_useReportedWidth) {
-				this._width = Math.floor(bb.width);
-			}
-			if (this._flag_useReportedHeight) {
-				this._height = Math.floor(bb.height);
-			}
-		}
-
 		// scaleFactor controls the sizing of the 'not to scale' note and the
 		//	initial message.
 		const xScaleFactor = ((this._width/remPx) - 20)/40;
 		const yScaleFactor = ((this._height/remPx) - 10)/20;
 		const scaleFactor = Math.min(1, Math.max(0, xScaleFactor, yScaleFactor));
 
-//		const minWidth = 300;
-//		const minHeight = 150;
-//
-//		if (this._width < minWidth) {
-//			console.warn('Orbit diagram is set below its minimum width.');
-//			this._width = minWidth;
-//		}
-//
-//		if (this._height < minHeight) {
-//			console.warn('Orbit diagram is set below its minimum height.');
-//			this._height = minHeight;
-//		}
+		this._root.style.width = this._width + 'px';
+		this._root.style.height = this._height + 'px';
 
-		if (!this._flag_useReportedWidth) {
-			this._root.style.width = this._width + 'px';
-		}
-		
-		if (!this._flag_useReportedHeight) {
-			this._root.style.height = this._height + 'px';
-		}
-
-//		console.group('orbit diagram redo layout');
-//		console.log('width: '+this._width);
-//		console.log('height: '+this._height);
-//		console.log('client height: '+this._root.clientHeight);
-//		console.log('offset height: '+this._root.offsetHeight);
-//		console.groupEnd();
+		this._svg.style.width = this._width + 'px';
+		this._svg.style.height = this._height + 'px';
 
 		this._svg.setAttribute('viewBox', '0 0 ' + this._width + ' ' + this._height);
 
@@ -356,13 +309,7 @@ export default class OrbitDiagram {
 		this._sunGradient.setAttribute('transform', 'translate(0, ' +
 				(this._height/2) + ') scale(' + sunGradientXScale + ', ' + sunScale + ')');
 
-//		console.group('redo layout');
-//		console.log('orbit radius: '+this._orbitRadiusPx);
-//		console.log('moon radius: '+this._moonRadiusPx);
-//		console.log('earth radius: '+this._earthRadiusPx);
-//		console.groupEnd();
-
-		// For development: check for hit area overlap.
+		// Check for hit area overlap.
 		let minSafeOrbitRadiusForMouse = this._earth._maxMouseHitAreaDistance + this._moon._maxMouseHitAreaDistance;
 		if (minSafeOrbitRadiusForMouse > this._orbitRadiusPx) {
 			console.warn('The earth\'s and moon\'s mouse hit areas will overlap.');
@@ -380,20 +327,7 @@ export default class OrbitDiagram {
 		this._note.style.fontSize = (0.6 + 0.4*scaleFactor) + 'rem';
 
 		this._needs_redoLayout = false;
-
-//		console.group('_redoLayout');
-//		console.log(' width: '+this._width);
-//		console.log(' height: '+this._height);
-//		console.log(' earthRadiusPx: '+this._earthRadiusPx);
-//		console.log(' moonRadiusPx: '+this._moonRadiusPx);
-//		console.log(' orbitRadiusPx: '+this._orbitRadiusPx);
-//		console.log(' orbitCenterX: '+this._orbitCenterX);
-//		console.log(' orbitCenterY: '+this._orbitCenterY);
-//		console.log(' moonScale: '+this._moonScale);
-//		console.log(' earthScale: '+this._earthScale);
-//		console.groupEnd();
 	}
-
 
 	_redrawOrbit() {
 		this._orbit.setAttribute('cx', this._orbitCenterX);

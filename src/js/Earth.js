@@ -2,11 +2,11 @@
 src/js/Earth.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-08-12
+2019-08-16
 */
 
 
-import EarthURL from '../graphics/Boston2_v1_earth-fixed.svg';
+import EarthURL from '../graphics/Boston2_v6_earth-snowcap-fixed.svg';
 import StickfigureURL from '../graphics/Boston2_v5b-modified_stickfigure-extraextrawide.svg';
 
 import CircularArcArrow from 'CircularArcArrow.js';

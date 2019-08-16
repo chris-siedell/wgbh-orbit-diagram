@@ -154,6 +154,10 @@ export default class InteractiveElement {
 
 		let highlightFilter = document.createElementNS(svgNS, 'filter');
 		highlightFilter.setAttribute('id', identity+'-highlight-filter');
+		highlightFilter.setAttribute('x', '-30%');
+		highlightFilter.setAttribute('y', '-30%');
+		highlightFilter.setAttribute('width', '160%');
+		highlightFilter.setAttribute('height', '160%');
 
 		let blur = document.createElementNS(svgNS, 'feGaussianBlur');
 		blur.setAttribute('in', 'SourceGraphic');

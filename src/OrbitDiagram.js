@@ -6,7 +6,7 @@ astro.unl.edu
 */
 
 
-const VERSION_STR = '0.8';
+const VERSION_STR = '0.9';
 console.info('WGBH Orbit Diagram (version: ' + VERSION_STR + ')');
 
 

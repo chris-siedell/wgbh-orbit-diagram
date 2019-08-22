@@ -360,6 +360,7 @@ export default class InteractiveElement {
 		this._focus.setAttribute('transform', rotate);
 		this._highlight.setAttribute('transform', rotate);
 		this._innerGroup.setAttribute('transform', scale);
+		this._innerGroupInteractive.setAttribute('transform', scale);
 	}
 
 

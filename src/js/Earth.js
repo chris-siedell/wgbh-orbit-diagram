@@ -2,7 +2,7 @@
 src/js/Earth.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-08-16
+2019-08-21
 */
 
 
@@ -98,7 +98,6 @@ export default class Earth extends InteractiveElement {
 
 		this._imageURL = EarthURL;
 
-
 		this._focus = document.createElementNS(svgNS, 'g');
 		this._focusRing = document.createElementNS(svgNS, 'path');
 		this._focusRing.setAttribute('stroke', this._focusStroke);
@@ -106,11 +105,18 @@ export default class Earth extends InteractiveElement {
 		this._focusRing.setAttribute('fill', 'none');
 		this._focus.appendChild(this._focusRing);
 
-
 		this._highlight = document.createElementNS(svgNS, 'g');
 		this._highlightArea = document.createElementNS(svgNS, 'path');
 		this._highlightArea.setAttribute('fill', this._highlightFill);
 		this._highlight.appendChild(this._highlightArea);
+
+		this._bisector = document.createElementNS(svgNS, 'path');
+		this._bisector.setAttribute('stroke', this._orbitDiagram._bisectorsColor);
+		this._bisector.setAttribute('stroke-width', this._orbitDiagram._bisectorsWidth);
+		this._bisector.setAttribute('visibility', 'hidden');
+		this._noTransforms.appendChild(this._bisector);
+
+		this._moonAnomaly = 0;
 
 		super._initAs('earth');
 	}
@@ -144,6 +150,19 @@ export default class Earth extends InteractiveElement {
 
 		this._hintCCWPath.setAttribute('d', this._hintCCWArrow.getPathData());
 
+	}
+
+	setMoonAnomaly(arg) {
+		this._moonAnomaly = arg;
+		this._redrawBisector();
+	}
+
+	setShowBisector(arg) {
+		if (arg) {
+			this._bisector.setAttribute('visibility', 'visible');
+		} else {
+			this._bisector.setAttribute('visibility', 'hidden');
+		}
 	}
 
 
@@ -180,7 +199,6 @@ export default class Earth extends InteractiveElement {
 
 		let level = darkestLevel + range*Math.pow(u, power);
 
-//		console.log(u+', '+level);
 		let n = level.toString();
 		this._filterMatrix.setAttribute('values', n + ' 0 0 0 0  0 ' + n + ' 0 0 0  0 0 ' + n + ' 0 0  0 0 0 1 0');
 	}
@@ -276,8 +294,18 @@ export default class Earth extends InteractiveElement {
 		this._maxMouseHitAreaDistance = this._scale * H;
 
 		this._redrawOtherStuff();
+		this._redrawBisector();
 	}
 
+	_redrawBisector() {
+		const theta = -this._moonAnomaly + 0.5*Math.PI;
+		const r = 1.6 * this._radius;
+		const x0 = r*Math.cos(theta);
+		const y0 = r*Math.sin(theta);
+		const x1 = -r*Math.cos(theta);
+		const y1 = -r*Math.sin(theta);
+		this._bisector.setAttribute('d', 'M ' + x0 + ' ' + y0 + ' ' + x1 + ' ' + y1);
+	}
 
 	_redrawOtherStuff() {
 

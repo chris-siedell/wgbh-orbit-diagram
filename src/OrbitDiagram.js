@@ -2,11 +2,11 @@
 OrbitDiagram.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-08-16
+2019-08-21
 */
 
 
-const VERSION_STR = '0.9';
+const VERSION_STR = '0.10';
 console.info('WGBH Orbit Diagram (version: ' + VERSION_STR + ')');
 
 
@@ -114,12 +114,20 @@ export default class OrbitDiagram {
 
 		this._coordinator = new InteractiveElementCoordinator(this);
 
+		this._bisectorsColor = 'rgba(255, 204, 102, 0.8)';
+		this._bisectorsWidth = 2;
+
+		this._earthMoonLine = document.createElementNS(svgNS, 'path');
+		this._earthMoonLine.setAttribute('stroke', this._bisectorsColor);
+		this._earthMoonLine.setAttribute('stroke-width', this._bisectorsWidth);
+		this._earthMoonLine.setAttribute('visibility', 'hidden');
+		this._svg.appendChild(this._earthMoonLine);
+
 		this._earth = new Earth(this._coordinator, this);
 		this._svg.appendChild(this._earth.getElement());
 
 		this._moon = new Moon(this._coordinator, this);
 		this._svg.appendChild(this._moon.getElement());
-
 
 		this._moon._otherElement = this._earth;
 		this._earth._otherElement = this._moon;
@@ -145,7 +153,6 @@ export default class OrbitDiagram {
 	getElement() {
 		return this._root;
 	}
-
 
 	setParams(params) {
 
@@ -182,6 +189,18 @@ export default class OrbitDiagram {
 				this._timeTickmarksGroup.setAttribute('visibility', 'visible');
 			} else {
 				this._timeTickmarksGroup.setAttribute('visibility', 'hidden');
+			}
+		}
+
+		if (params.hasOwnProperty('showEarthBisector')) {
+			this._earth.setShowBisector(params.showEarthBisector);
+		}
+		
+		if (params.hasOwnProperty('showEarthMoonLine')) {
+			if (params.showEarthMoonLine) {
+				this._earthMoonLine.setAttribute('visibility', 'visible');
+			} else {
+				this._earthMoonLine.setAttribute('visibility', 'hidden');
 			}
 		}
 	}
@@ -230,6 +249,10 @@ export default class OrbitDiagram {
 		let moonX = this._orbitCenterX + this._orbitRadiusPx*Math.cos(moonAnomaly);
 		let moonY = this._orbitCenterY - this._orbitRadiusPx*Math.sin(moonAnomaly);
 		this._moon.setPosition(moonX, moonY);
+
+		this._earth.setMoonAnomaly(moonAnomaly);
+
+		this._earthMoonLine.setAttribute('d', 'M ' + this._orbitCenterX + ' ' + this._orbitCenterY + ' L ' + moonX + ' ' + moonY);
 
 		this._needs_updateEarthAndMoon = false;
 	}

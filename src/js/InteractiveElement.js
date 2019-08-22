@@ -2,7 +2,7 @@
 src/js/InteractiveElement.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-08-08
+2019-08-21
 */
 
 
@@ -117,6 +117,7 @@ export default class InteractiveElement {
 		this._unshadowedBehind = document.createElementNS(svgNS, 'g');
 		this._unshadowed = document.createElementNS(svgNS, 'g');
 		this._unshadowedAndUnscaled = document.createElementNS(svgNS, 'g');
+		this._noTransforms = document.createElementNS(svgNS, 'g');
 
 
 	}
@@ -151,6 +152,7 @@ export default class InteractiveElement {
 
 		this._innerGroup = document.createElementNS(svgNS, 'g');
 
+		this._innerGroupInteractive = document.createElementNS(svgNS, 'g');
 
 		let highlightFilter = document.createElementNS(svgNS, 'filter');
 		highlightFilter.setAttribute('id', identity+'-highlight-filter');
@@ -192,9 +194,11 @@ export default class InteractiveElement {
 		this._innerGroup.appendChild(this._unshadowed);
 
 		this._interactive = document.createElementNS(svgNS, 'g');
-		this._innerGroup.appendChild(this._interactive);
+		this._innerGroupInteractive.appendChild(this._interactive);
 
 		this._outerGroup.appendChild(this._innerGroup);
+		this._outerGroup.appendChild(this._noTransforms);
+		this._outerGroup.appendChild(this._innerGroupInteractive);
 		this._outerGroup.appendChild(this._unshadowedAndUnscaled);
 
 		if (!this._NEVER_SHOW_FOCUS_RING) {

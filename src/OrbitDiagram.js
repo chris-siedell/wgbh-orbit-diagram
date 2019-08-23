@@ -2,11 +2,11 @@
 OrbitDiagram.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-08-21
+2019-08-22
 */
 
 
-const VERSION_STR = '0.10';
+const VERSION_STR = '0.11';
 console.info('WGBH Orbit Diagram (version: ' + VERSION_STR + ')');
 
 
@@ -114,12 +114,12 @@ export default class OrbitDiagram {
 
 		this._coordinator = new InteractiveElementCoordinator(this);
 
-		this._bisectorsColor = 'rgba(255, 204, 102, 0.8)';
-		this._bisectorsWidth = 2;
+		this._earthMoonLineColor = 'rgba(220, 220, 220, 1)';
+		this._earthMoonLineWidth = 3;
 
 		this._earthMoonLine = document.createElementNS(svgNS, 'path');
-		this._earthMoonLine.setAttribute('stroke', this._bisectorsColor);
-		this._earthMoonLine.setAttribute('stroke-width', this._bisectorsWidth);
+		this._earthMoonLine.setAttribute('stroke', this._earthMoonLineColor);
+		this._earthMoonLine.setAttribute('stroke-width', this._earthMoonLineWidth);
 		this._earthMoonLine.setAttribute('visibility', 'hidden');
 		this._svg.appendChild(this._earthMoonLine);
 

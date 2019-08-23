@@ -2,7 +2,7 @@
 src/js/Earth.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-08-21
+2019-08-22
 */
 
 
@@ -26,26 +26,9 @@ export default class Earth extends InteractiveElement {
 
 		this._DEFAULT_IMAGE_RADIUS = 50;
 
-//		this._outerGroup = document.createElementNS(svgNS, 'g');
-//
-//		this._innerGroup = document.createElementNS(svgNS, 'g');
-//		this._outerGroup.appendChild(this._innerGroup);
-//
-//		this._focus = document.createElementNS(svgNS, 'image');
-//		this._focus.setAttribute('width', 130);
-//		this._focus.setAttribute('height', 150);
-//		this._focus.setAttribute('x', -65);
-//		this._focus.setAttribute('y', -85);
-//		this._focus.setAttributeNS(xlinkNS, 'href', EarthFocusURL);
-//		this._innerGroup.appendChild(this._focus);
-//
-//		this._shadowed = document.createElementNS(svgNS, 'image');
-//		this._shadowed.setAttribute('width', 130);
-//		this._shadowed.setAttribute('height', 150);
-//		this._shadowed.setAttribute('x', -65);
-//		this._shadowed.setAttribute('y', -85);
-//		this._shadowed.setAttributeNS(xlinkNS, 'href', EarthURL);
-//		this._innerGroup.appendChild(this._shadowed);
+		this._moonRiseBisectorColor = 'rgba(180, 180, 255, 1)';
+		this._moonSetBisectorColor = 'rgba(255, 180, 180, 1)';
+		this._bisectorWidth = 3;
 
 		this._filter = document.createElementNS(svgNS, 'filter');
 		this._filter.setAttribute('id', 'stickfigure-filter');
@@ -110,11 +93,17 @@ export default class Earth extends InteractiveElement {
 		this._highlightArea.setAttribute('fill', this._highlightFill);
 		this._highlight.appendChild(this._highlightArea);
 
-		this._bisector = document.createElementNS(svgNS, 'path');
-		this._bisector.setAttribute('stroke', this._orbitDiagram._bisectorsColor);
-		this._bisector.setAttribute('stroke-width', this._orbitDiagram._bisectorsWidth);
-		this._bisector.setAttribute('visibility', 'hidden');
-		this._noTransforms.appendChild(this._bisector);
+		this._moonRiseBisector = document.createElementNS(svgNS, 'path');
+		this._moonRiseBisector.setAttribute('stroke', this._moonRiseBisectorColor);
+		this._moonRiseBisector.setAttribute('stroke-width', this._bisectorWidth);
+		this._moonRiseBisector.setAttribute('visibility', 'hidden');
+		this._noTransforms.appendChild(this._moonRiseBisector);
+
+		this._moonSetBisector = document.createElementNS(svgNS, 'path');
+		this._moonSetBisector.setAttribute('stroke', this._moonSetBisectorColor);
+		this._moonSetBisector.setAttribute('stroke-width', this._bisectorWidth);
+		this._moonSetBisector.setAttribute('visibility', 'hidden');
+		this._noTransforms.appendChild(this._moonSetBisector);
 
 		this._moonAnomaly = 0;
 
@@ -159,9 +148,11 @@ export default class Earth extends InteractiveElement {
 
 	setShowBisector(arg) {
 		if (arg) {
-			this._bisector.setAttribute('visibility', 'visible');
+			this._moonRiseBisector.setAttribute('visibility', 'visible');
+			this._moonSetBisector.setAttribute('visibility', 'visible');
 		} else {
-			this._bisector.setAttribute('visibility', 'hidden');
+			this._moonRiseBisector.setAttribute('visibility', 'hidden');
+			this._moonSetBisector.setAttribute('visibility', 'hidden');
 		}
 	}
 
@@ -304,7 +295,8 @@ export default class Earth extends InteractiveElement {
 		const y0 = r*Math.sin(theta);
 		const x1 = -r*Math.cos(theta);
 		const y1 = -r*Math.sin(theta);
-		this._bisector.setAttribute('d', 'M ' + x0 + ' ' + y0 + ' ' + x1 + ' ' + y1);
+		this._moonRiseBisector.setAttribute('d', 'M ' + x0 + ' ' + y0 + ' L 0 0');
+		this._moonSetBisector.setAttribute('d', 'M 0 0 L ' + x1 + ' ' + y1);
 	}
 
 	_redrawOtherStuff() {

@@ -2,7 +2,7 @@
 src/js/InteractiveElement.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-08-21
+2019-08-27
 */
 
 
@@ -10,23 +10,12 @@ astro.unl.edu
 const svgNS = 'http://www.w3.org/2000/svg';
 const xlinkNS = 'http://www.w3.org/1999/xlink';
 
-/*
-
-The dragging code here borrows heavily from the DraggableItemMixin in phase-positions-demo. One feature
-	of that mixin that was not copied is "competing drag items". That feature is not necessary unless the
-	diagram is drawn at such a scale that the earth and moon hit areas overlap.
-
-*/
-
-
 
 export default class InteractiveElement {
 
 
-	constructor(coordinator, orbitDiagram) {
+	constructor(orbitDiagram) {
 
-		// parent is the OrbitDiagram instance that created the object.
-		this._coordinator = coordinator;
 		this._orbitDiagram = orbitDiagram;
 
 		this.TYPE_MOUSE = 'mouse';
@@ -126,13 +115,6 @@ export default class InteractiveElement {
 		// identity must be 'moon' or 'earth'.
 
 		this._identity = identity;
-		if (identity === 'moon') {
-			this._coordinator.registerMoon(this);
-		} else if (identity === 'earth') {
-			this._coordinator.registerEarth(this);
-		} else {
-			throw new Error('Unknown identity.');
-		}
 
 		this._onMouseEnter = this._onMouseEnter.bind(this);
 		this._onMouseLeaveLocal = this._onMouseLeaveLocal.bind(this);
@@ -253,12 +235,12 @@ export default class InteractiveElement {
 			return;
 		}
 
-		if (!this._coordinator.getIsDraggingAllowed()) {
+		if (!this._orbitDiagram._getIsDraggingAllowed()) {
 			console.error('Key down detected for an orbit diagram element when interactivity is not allowed.');
 			return;
 		}
 
-		if (this._coordinator.getIsDraggingInProgress()) {
+		if (this._orbitDiagram._getIsDraggingInProgress()) {
 			// Ignore key input when dragging.
 			return;
 		}
@@ -272,7 +254,7 @@ export default class InteractiveElement {
 	}
 
 	_onFocus(e) {
-		if (this._coordinator.getIsDraggingAllowed()) {
+		if (this._orbitDiagram._getIsDraggingAllowed()) {
 			this._isFocused = true;
 			this._outerGroup.addEventListener('keydown', this._onKeyDown, {passive: false});
 			this.updateAppearance();
@@ -406,7 +388,7 @@ export default class InteractiveElement {
 		this._dragInitOpaqueTime = this._orbitDiagram._timekeeper.getTime().opaqueTime;	
 		this._calcDragAngleOffset(clientPt);	
 		
-		this._coordinator._onDragBegin(this);
+		this._orbitDiagram._onDragBegin(this);
 
 		this.updateAppearance();
 		this._otherElement.updateAppearance();
@@ -456,7 +438,7 @@ export default class InteractiveElement {
 		}
 		this._dragType = this.TYPE_NONE;
 		if (didStop) {
-			this._coordinator._onDragEnd(this);
+			this._orbitDiagram._onDragEnd(this);
 			this.updateCursor();
 			this.updateHighlight();
 			this._otherElement.updateCursor();
@@ -480,7 +462,7 @@ export default class InteractiveElement {
 		//	to the item's hotspot. In this case, dragging may start on the item, but priority
 		//	should be given to any competing items with lower scores.
 
-		if (!this._coordinator.getCanDragInitOnElement(this)) {
+		if (!this._orbitDiagram._getCanDragInitOnElement(this)) {
 			return Number.POSITIVE_INFINITY;
 		}
 
@@ -727,14 +709,14 @@ export default class InteractiveElement {
 		let cursor = null; // null means no cursor request for this element
 		if (this._dragType === this.TYPE_MOUSE) {
 			cursor = 'grabbing';
-		} else if (this._isMouseOver && this._coordinator.getCanDragStartOnElement(this)) {
+		} else if (this._isMouseOver && this._orbitDiagram._getCanDragStartOnElement(this)) {
 			cursor = 'grab';
 		}
 		if (cursor === this._cursor) {
 			return;
 		}
 		this._cursor = cursor;
-		this._coordinator.setCursor(this._identity, cursor);
+		this._orbitDiagram._setCursor(this._identity, cursor);
 	}
 
 	updateHighlight() {
@@ -746,7 +728,7 @@ export default class InteractiveElement {
 		let showHighlight = false;
 		if (this.getIsBeingDragged()) {
 			showHighlight = true;
-		} else if (this._isMouseOver && this._coordinator.getCanDragStartOnElement(this)) {
+		} else if (this._isMouseOver && this._orbitDiagram._getCanDragStartOnElement(this)) {
 			showHighlight = true;
 		}
 		if (this._showFocusRing) {
@@ -764,7 +746,7 @@ export default class InteractiveElement {
 	}
 
 	updateFocus() {
-		let isTabable = this._coordinator.getIsDraggingAllowed();
+		let isTabable = this._orbitDiagram._getIsDraggingAllowed();
 		let showFocusRing = this._isFocused;
 		if (this._NEVER_SHOW_FOCUS_RING) {
 			showFocusRing = false;

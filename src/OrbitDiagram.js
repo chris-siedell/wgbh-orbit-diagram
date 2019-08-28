@@ -2,11 +2,11 @@
 OrbitDiagram.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-08-22
+2019-08-27
 */
 
 
-const VERSION_STR = '0.11';
+const VERSION_STR = '0.12';
 console.info('WGBH Orbit Diagram (version: ' + VERSION_STR + ')');
 
 
@@ -22,7 +22,6 @@ import TimeTickmarksURL from './graphics/time-tickmarks-2.svg';
 
 import Moon from './js/Moon.js';
 import Earth from './js/Earth.js';
-import InteractiveElementCoordinator from './js/InteractiveElementCoordinator.js';
 import InitMessage from './js/InitMessage.js';
 
 
@@ -46,6 +45,10 @@ export default class OrbitDiagram {
 		if (this._timekeeper === null) {
 			throw new Error('Orbit diagram requires a lunar timekeeper object.');
 		}
+
+		this._isDraggingAllowed = true;
+		this._isDraggingInProgress = false;
+		this._dragElement = null;
 
 		this._root = document.createElement('div');
 		this._root.classList.add('wgbh-orbit-diagram-root');
@@ -112,8 +115,6 @@ export default class OrbitDiagram {
 		this._orbit.setAttribute('fill', 'none');
 		this._svg.appendChild(this._orbit);
 
-		this._coordinator = new InteractiveElementCoordinator(this);
-
 		this._earthMoonLineColor = 'rgba(220, 220, 220, 1)';
 		this._earthMoonLineWidth = 3;
 
@@ -123,16 +124,24 @@ export default class OrbitDiagram {
 		this._earthMoonLine.setAttribute('visibility', 'hidden');
 		this._svg.appendChild(this._earthMoonLine);
 
-		this._earth = new Earth(this._coordinator, this);
+		this._earth = new Earth(this);
 		this._svg.appendChild(this._earth.getElement());
 
-		this._moon = new Moon(this._coordinator, this);
+		this._moon = new Moon(this);
 		this._svg.appendChild(this._moon.getElement());
 
 		this._moon._otherElement = this._earth;
 		this._earth._otherElement = this._moon;
 
-		this._coordinator.checkRegistrations();
+		// The _cursorRequests set holds requests to set the cursor. Each request
+		//	is identified with a key (a string) that must be uniquely associated with
+		//	the source of the request. 
+		// Each object in _cursorRequests has these properties:
+		//	priority - a number
+		//	cursor - a string
+		this._cursorRequests = {};
+		this._DEFAULT_CURSOR = 'auto';
+		this._nextCursorPriority = 1;
 
 		this._areHintsShown = true;
 
@@ -219,10 +228,10 @@ export default class OrbitDiagram {
 			let animState = this._timekeeper.getAnimationState();
 			if (animState === this._timekeeper.IDLE) {
 				// Allow dragging.
-				this._coordinator.setIsDraggingAllowed(true);
+				this._setIsDraggingAllowed(true);
 			} else if (animState === this._timekeeper.PLAYING || animState === this._timekeeper.TRANSITIONING) {
 				// Forbid dragging. This call also cancels any active dragging.
-				this._coordinator.setIsDraggingAllowed(false);
+				this._setIsDraggingAllowed(false);
 			} else {
 				console.error('Unknown animation state.');
 			}
@@ -372,6 +381,109 @@ export default class OrbitDiagram {
 			this._orbit.setAttribute('stroke-dasharray', 'none');
 		}
 		this._needs_redrawOrbit = false;
+	}
+
+
+	/*
+	**	Element Dragging
+	*/
+	
+	_cancelDragging() {
+		this._moon.cancelDragging();
+		this._earth.cancelDragging();
+	}
+
+	_setIsDraggingAllowed(arg) {
+		this._isDraggingAllowed = Boolean(arg);
+		if (!this._isDraggingAllowed) {
+			this._cancelDragging();
+		}
+		this._updateEarthMoonAppearances();
+	}
+
+	_getIsDraggingAllowed() {
+		return this._isDraggingAllowed;
+	}
+
+	_getIsDraggingInProgress() {
+		return this._dragElement !== null;
+	}
+
+	_onDragBegin(element) {
+		// Called by an element.
+		this._dragElement = element;
+	}
+
+	_onDragEnd(element) {
+		// Called by an element.
+		this._dragElement = null;
+	}
+
+	_getCanDragInitOnElement(element) {
+		return this._isDraggingAllowed && (this._dragElement === null || this._dragElement === element);
+	}
+	
+	_getCanDragStartOnElement(element) {
+		return this._isDraggingAllowed && this._dragElement === null;
+	}
+
+
+	/*
+	**	Cursor Management
+	*/
+
+	_setCursor(key, cursor) {
+		// Called by the earth or moon elements.
+
+		if (typeof cursor !== 'string') {
+			// The request associated with the given key will be withdrawn.
+			if (this._cursorRequests.hasOwnProperty(key)) {
+				delete this._cursorRequests[key];
+			} else {
+				// Probably a redundant call.
+				console.error('_setCursor called with unknown key.');
+			}
+		} else if (this._cursorRequests.hasOwnProperty(key)) {
+			// An active request already exists for the key, so update it.
+			this._cursorRequests[key].priority = this._nextCursorPriority++;
+			this._cursorRequests[key].cursor = cursor;
+
+		} else {
+			// There is no active request associated with the key, so create it.
+			this._cursorRequests[key] = {
+				priority: this._nextCursorPriority++,
+				cursor: cursor,
+			};
+		}	
+
+		// Find the cursor request with the highest priority, or fall back to
+		//	the default cursor if there are no requests.
+		let newCursor = this._DEFAULT_CURSOR;
+		let newCursorPriority = Number.NEGATIVE_INFINITY;
+		for (let x in this._cursorRequests) {
+			let request = this._cursorRequests[x];
+			if (request.priority >= newCursorPriority) {
+				newCursorPriority = request.priority;
+				newCursor = request.cursor;
+			}
+		}
+
+		if (newCursor === this._cursor) {
+			return;
+		}
+
+		this._cursor = newCursor;
+		document.body.style.cursor = this._cursor;
+	}
+
+
+	/*
+	**	Misc
+	*/
+
+	_updateEarthMoonAppearances() {
+		this._earth.updateAppearance();
+		this._moon.updateAppearance();
 	}
 
 }

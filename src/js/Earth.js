@@ -21,8 +21,8 @@ const xlinkNS = 'http://www.w3.org/1999/xlink';
 export default class Earth extends InteractiveElement {
 
 
-	constructor(coordinator, orbitDiagram) {
-		super(coordinator, orbitDiagram);
+	constructor(orbitDiagram) {
+		super(orbitDiagram);
 
 		this._DEFAULT_IMAGE_RADIUS = 50;
 

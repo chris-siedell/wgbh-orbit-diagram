@@ -2,7 +2,7 @@
 src/js/Moon.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-07-19
+2019-08-27
 */
 
 
@@ -19,8 +19,8 @@ const xlinkNS = 'http://www.w3.org/1999/xlink';
 export default class Moon extends InteractiveElement {
 
 
-	constructor(coordinator, orbitDiagram) {
-		super(coordinator, orbitDiagram);
+	constructor(orbitDiagram) {
+		super(orbitDiagram);
 
 		this._DEFAULT_IMAGE_RADIUS = 14;//13.5;
 

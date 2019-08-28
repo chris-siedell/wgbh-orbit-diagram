@@ -2,7 +2,7 @@
 src/js/Earth.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-08-22
+2019-08-27
 */
 
 
@@ -98,6 +98,12 @@ export default class Earth extends InteractiveElement {
 		this._moonRiseBisector.setAttribute('stroke-width', this._bisectorWidth);
 		this._moonRiseBisector.setAttribute('visibility', 'hidden');
 		this._noTransforms.appendChild(this._moonRiseBisector);
+		
+		this._moonRiseBisectorDot = document.createElementNS(svgNS, 'path');
+		this._moonRiseBisectorDot.setAttribute('fill', this._moonRiseBisectorColor);
+		this._moonRiseBisectorDot.setAttribute('stroke', 'none');
+		this._moonRiseBisectorDot.setAttribute('visibility', 'hidden');
+		this._noTransforms.appendChild(this._moonRiseBisectorDot);
 
 		this._moonSetBisector = document.createElementNS(svgNS, 'path');
 		this._moonSetBisector.setAttribute('stroke', this._moonSetBisectorColor);
@@ -149,9 +155,11 @@ export default class Earth extends InteractiveElement {
 	setShowBisector(arg) {
 		if (arg) {
 			this._moonRiseBisector.setAttribute('visibility', 'visible');
+			this._moonRiseBisectorDot.setAttribute('visibility', 'visible');
 			this._moonSetBisector.setAttribute('visibility', 'visible');
 		} else {
 			this._moonRiseBisector.setAttribute('visibility', 'hidden');
+			this._moonRiseBisectorDot.setAttribute('visibility', 'hidden');
 			this._moonSetBisector.setAttribute('visibility', 'hidden');
 		}
 	}
@@ -291,11 +299,20 @@ export default class Earth extends InteractiveElement {
 	_redrawBisector() {
 		const theta = -this._moonAnomaly + 0.5*Math.PI;
 		const r = 1.6 * this._radius;
+		const dotSize = 0.1;
+		const rdot = dotSize*r;	
+		const sdot = r - 2*rdot;
 		const x0 = r*Math.cos(theta);
 		const y0 = r*Math.sin(theta);
+		const xd = sdot*Math.cos(theta);
+		const yd = sdot*Math.sin(theta);
 		const x1 = -r*Math.cos(theta);
 		const y1 = -r*Math.sin(theta);
+		let dotData = ' M ' + x0 + ' ' + y0;
+		dotData += ' A ' + rdot + ' ' + rdot + ' 180 1 0 ' + xd + ' ' + yd;
+		dotData += ' A ' + rdot + ' ' + rdot + ' 180 1 0 ' + x0 + ' ' + y0;
 		this._moonRiseBisector.setAttribute('d', 'M ' + x0 + ' ' + y0 + ' L 0 0');
+		this._moonRiseBisectorDot.setAttribute('d', dotData);
 		this._moonSetBisector.setAttribute('d', 'M 0 0 L ' + x1 + ' ' + y1);
 	}
 

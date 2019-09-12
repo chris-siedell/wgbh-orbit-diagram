@@ -2,7 +2,7 @@
 src/js/Earth.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-08-27
+2019-09-12
 */
 
 
@@ -26,8 +26,8 @@ export default class Earth extends InteractiveElement {
 
 		this._DEFAULT_IMAGE_RADIUS = 50;
 
-		this._moonRiseBisectorColor = 'rgba(180, 180, 255, 1)';
-		this._moonSetBisectorColor = 'rgba(255, 180, 180, 1)';
+		this._moonRiseBisectorColor = 'rgba(200, 200, 255, 1)';
+		this._moonSetBisectorColor = 'rgba(255, 200, 200, 1)';
 		this._bisectorWidth = 3;
 
 		this._filter = document.createElementNS(svgNS, 'filter');
@@ -74,10 +74,8 @@ export default class Earth extends InteractiveElement {
 		this._unshadowedAndUnscaled.appendChild(this._hint);
 
 		this._touchHitArea = document.createElementNS(svgNS, 'path');
-//		this._innerGroup.appendChild(this._touchHitArea);
 
 		this._mouseHitArea = document.createElementNS(svgNS, 'path');
-//		this._innerGroup.appendChild(this._mouseHitArea);
 
 		this._imageURL = EarthURL;
 
@@ -98,18 +96,26 @@ export default class Earth extends InteractiveElement {
 		this._moonRiseBisector.setAttribute('stroke-width', this._bisectorWidth);
 		this._moonRiseBisector.setAttribute('visibility', 'hidden');
 		this._noTransforms.appendChild(this._moonRiseBisector);
-		
-		this._moonRiseBisectorDot = document.createElementNS(svgNS, 'path');
-		this._moonRiseBisectorDot.setAttribute('fill', this._moonRiseBisectorColor);
-		this._moonRiseBisectorDot.setAttribute('stroke', 'none');
-		this._moonRiseBisectorDot.setAttribute('visibility', 'hidden');
-		this._noTransforms.appendChild(this._moonRiseBisectorDot);
+
+		this._moonRiseBisectorIndicator = document.createElementNS(svgNS, 'path');
+		this._moonRiseBisectorIndicator.setAttribute('fill', 'none');
+		this._moonRiseBisectorIndicator.setAttribute('stroke', this._moonRiseBisectorColor);
+		this._moonRiseBisectorIndicator.setAttribute('stroke-width', this._bisectorWidth);
+		this._moonRiseBisectorIndicator.setAttribute('visibility', 'hidden');
+		this._noTransforms.appendChild(this._moonRiseBisectorIndicator);
 
 		this._moonSetBisector = document.createElementNS(svgNS, 'path');
 		this._moonSetBisector.setAttribute('stroke', this._moonSetBisectorColor);
 		this._moonSetBisector.setAttribute('stroke-width', this._bisectorWidth);
 		this._moonSetBisector.setAttribute('visibility', 'hidden');
 		this._noTransforms.appendChild(this._moonSetBisector);
+
+		this._moonSetBisectorIndicator = document.createElementNS(svgNS, 'path');
+		this._moonSetBisectorIndicator.setAttribute('fill', 'none');
+		this._moonSetBisectorIndicator.setAttribute('stroke', this._moonSetBisectorColor);
+		this._moonSetBisectorIndicator.setAttribute('stroke-width', this._bisectorWidth);
+		this._moonSetBisectorIndicator.setAttribute('visibility', 'hidden');
+		this._noTransforms.appendChild(this._moonSetBisectorIndicator);
 
 		this._moonAnomaly = 0;
 
@@ -155,12 +161,14 @@ export default class Earth extends InteractiveElement {
 	setShowBisector(arg) {
 		if (arg) {
 			this._moonRiseBisector.setAttribute('visibility', 'visible');
-			this._moonRiseBisectorDot.setAttribute('visibility', 'visible');
+			this._moonRiseBisectorIndicator.setAttribute('visibility', 'visible');
 			this._moonSetBisector.setAttribute('visibility', 'visible');
+			this._moonSetBisectorIndicator.setAttribute('visibility', 'visible');
 		} else {
 			this._moonRiseBisector.setAttribute('visibility', 'hidden');
-			this._moonRiseBisectorDot.setAttribute('visibility', 'hidden');
+			this._moonRiseBisectorIndicator.setAttribute('visibility', 'hidden');
 			this._moonSetBisector.setAttribute('visibility', 'hidden');
+			this._moonSetBisectorIndicator.setAttribute('visibility', 'hidden');
 		}
 	}
 
@@ -298,22 +306,52 @@ export default class Earth extends InteractiveElement {
 
 	_redrawBisector() {
 		const theta = -this._moonAnomaly + 0.5*Math.PI;
-		const r = 1.6 * this._radius;
-		const dotSize = 0.1;
-		const rdot = dotSize*r;	
-		const sdot = r - 2*rdot;
-		const x0 = r*Math.cos(theta);
-		const y0 = r*Math.sin(theta);
-		const xd = sdot*Math.cos(theta);
-		const yd = sdot*Math.sin(theta);
-		const x1 = -r*Math.cos(theta);
-		const y1 = -r*Math.sin(theta);
-		let dotData = ' M ' + x0 + ' ' + y0;
-		dotData += ' A ' + rdot + ' ' + rdot + ' 180 1 0 ' + xd + ' ' + yd;
-		dotData += ' A ' + rdot + ' ' + rdot + ' 180 1 0 ' + x0 + ' ' + y0;
-		this._moonRiseBisector.setAttribute('d', 'M ' + x0 + ' ' + y0 + ' L 0 0');
-		this._moonRiseBisectorDot.setAttribute('d', dotData);
-		this._moonSetBisector.setAttribute('d', 'M 0 0 L ' + x1 + ' ' + y1);
+		const r0 = 2.04 * this._radius;
+
+		const cosTheta = Math.cos(theta);
+		const sinTheta = Math.sin(theta);
+
+		// Rising indictor (rind) is a triangle.
+		const rindSize = 0.2;
+		const r2 = r0*(1 - rindSize);
+
+		const x0 = r0*cosTheta;
+		const y0 = r0*sinTheta;
+		const x2 = r2*cosTheta;
+		const y2 = r2*sinTheta;
+		const tx = x0 - x2;
+		const ty = y0 - y2;
+		const x1 = 0.5*tx + 0.866*ty + x2;
+		const y1 = -0.866*tx + 0.5*ty + y2;
+
+		const rindData = ' M ' + x0 + ' ' + y0 + ' L ' + x1 + ' ' + y1 + ' ' + x2 + ' ' + y2 + ' Z';
+
+		// Setting indicator (sind) is a diamond.		
+		const sindSize = 0.2;
+		const r4 = r0;
+		const r3 = r4*(1 - sindSize);
+
+		const x3 = -r3*cosTheta;
+		const y3 = -r3*sinTheta;
+		const x4 = -r4*cosTheta;
+		const y4 = -r4*sinTheta;
+
+		const mx = 0.5*(x3 + x4);
+		const my = 0.5*(y3 + y4);
+		const f = 1.2;
+		const ax = f*(x3 - mx);
+		const ay = f*(y3 - my);
+		const x5 = -ay + mx;
+		const y5 = ax + my;
+		const x6 = ay + mx;
+		const y6 = -ax + my;
+
+		const sindData = ' M ' + x3 + ' ' + y3 + ' L ' + x6 + ' ' + y6 + ' ' + x4 + ' ' + y4 + ' ' + x5 + ' ' + y5 + ' Z';
+
+		this._moonRiseBisector.setAttribute('d', 'M ' + x2 + ' ' + y2 + ' L 0 0');
+		this._moonRiseBisectorIndicator.setAttribute('d', rindData);
+		this._moonSetBisector.setAttribute('d', 'M 0 0 L ' + x3 + ' ' + y3);
+		this._moonSetBisectorIndicator.setAttribute('d', sindData);
 	}
 
 	_redrawOtherStuff() {

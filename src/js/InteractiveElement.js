@@ -2,7 +2,7 @@
 src/js/InteractiveElement.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-08-27
+2019-09-12
 */
 
 
@@ -179,9 +179,9 @@ export default class InteractiveElement {
 		this._innerGroupInteractive.appendChild(this._interactive);
 
 		this._outerGroup.appendChild(this._innerGroup);
+		this._outerGroup.appendChild(this._unshadowedAndUnscaled);
 		this._outerGroup.appendChild(this._noTransforms);
 		this._outerGroup.appendChild(this._innerGroupInteractive);
-		this._outerGroup.appendChild(this._unshadowedAndUnscaled);
 
 		if (!this._NEVER_SHOW_FOCUS_RING) {
 			this._outerGroup.appendChild(this._focus);

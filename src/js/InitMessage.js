@@ -2,7 +2,7 @@
 InitMessage.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-08-14
+2020-04-30
 */
 
 
@@ -17,7 +17,7 @@ export default class InitMessage {
 		this._text = document.createElement('div');
 		this._text.classList.add('wgbh-orbit-diagram-init-message-text');
 
-		this._text.textContent = 'Drag Earth or the Moon to change the time.';
+		this._text.textContent = 'Arrastra la Tierra o la Luna para cambiar la hora.';
 
 		this._element.appendChild(this._text);
 

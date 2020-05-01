@@ -2,7 +2,7 @@
 OrbitDiagram.js
 wgbh-orbit-diagram
 astro.unl.edu
-2019-09-12
+2020-04-30
 */
 
 
@@ -55,7 +55,7 @@ export default class OrbitDiagram {
 
 		this._note = document.createElement('div');
 		this._note.classList.add('wgbh-orbit-diagram-note');
-		this._note.textContent = 'not to scale';
+		this._note.textContent = 'no está a escala';
 		this._root.appendChild(this._note);
 
 		this._svg = document.createElementNS(svgNS, 'svg');
@@ -355,8 +355,9 @@ export default class OrbitDiagram {
 		this._initMessage.setPosition(this._width/2, this._orbitCenterY - this._orbitRadiusPx);
 		this._initMessage.setScale(scaleFactor);
 
-		const noteMargins = 0.2 + 0.8*scaleFactor;	
-		this._note.style.margin = '0 ' + noteMargins + 'rem ' + noteMargins + 'rem 0';
+		const noteRightMargin = 0.2 + 0.6*scaleFactor;	
+		const noteBottomMargin = 0.6*scaleFactor;	
+		this._note.style.margin = '0 ' + noteRightMargin + 'rem ' + noteBottomMargin + 'rem 0';
 		this._note.style.fontSize = (0.6 + 0.4*scaleFactor) + 'rem';
 
 		this._needs_redoLayout = false;

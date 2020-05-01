@@ -18,7 +18,7 @@ import SunURL from './graphics/Boston2_v2-modified_sun.svg';
 import SunGradientURL from './graphics/Boston2_v2-modified_sun-gradient.svg';
 
 // The time tickmarks SVG must be 340x340.
-import TimeTickmarksURL from './graphics/time-tickmarks-2.svg';
+import TimeTickmarksURL from './graphics/time-tickmarks-2-spanish.svg';
 
 import Moon from './js/Moon.js';
 import Earth from './js/Earth.js';
@@ -82,10 +82,10 @@ export default class OrbitDiagram {
 		this._svg.appendChild(this._timeTickmarksGroup);
 
 		this._timeTickmarks = document.createElementNS(svgNS, 'image');
-		this._timeTickmarks.setAttribute('width', 340);
-		this._timeTickmarks.setAttribute('height', 340);
-		this._timeTickmarks.setAttribute('x', -170);
-		this._timeTickmarks.setAttribute('y', -170);
+		this._timeTickmarks.setAttribute('width', 400);
+		this._timeTickmarks.setAttribute('height', 400);
+		this._timeTickmarks.setAttribute('x', -200);
+		this._timeTickmarks.setAttribute('y', -200);
 		this._timeTickmarks.setAttributeNS(xlinkNS, 'href', TimeTickmarksURL);
 		this._timeTickmarksGroup.appendChild(this._timeTickmarks);
 
